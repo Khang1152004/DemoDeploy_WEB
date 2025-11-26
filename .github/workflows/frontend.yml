@@ -17,7 +17,7 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: 'githubtest.free.nf/htdocs'   # ví dụ: /htdocs/
+          server-dir: 'githubtest.free.nf/htdocs/'   # ví dụ: /htdocs/
           local-dir: './'                       # upload toàn bộ repo
           exclude: |
             **/.git*
