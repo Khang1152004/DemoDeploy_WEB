@@ -1,4 +1,4 @@
-name: Deploy PHP site to InfinityFree (lftp safe)
+name: Deploy PHP site to InfinityFree (lftp - full repo)
 
 on:
   push:
@@ -8,8 +8,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # sửa nếu bạn muốn upload cả repo (./) thay vì chỉ public/
-      LOCAL_UPLOAD_DIR: public
+      # Nếu muốn upload root repo thay đổi LOCAL_UPLOAD_DIR thành "."
+      LOCAL_UPLOAD_DIR: .
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -21,7 +21,7 @@ jobs:
           echo "Upload dir: $LOCAL_UPLOAD_DIR"
           ls -la "$LOCAL_UPLOAD_DIR" || true
 
-      - name: Install lftp and sshpass (for sftp fallback)
+      - name: Install lftp and sshpass
         run: sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y lftp sshpass
 
       - name: Deploy (try FTPS -> FTP -> SFTP)
