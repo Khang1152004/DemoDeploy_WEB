@@ -1,27 +1,46 @@
-name: Deploy PHP site to InfinityFree (FTP)
+name: Deploy PHP site to InfinityFree (lftp safe)
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
 
 jobs:
-  ftp-deploy:
+  deploy:
     runs-on: ubuntu-latest
+    env:
+      # sửa nếu bạn muốn upload cả repo (./) thay vì chỉ public/
+      LOCAL_UPLOAD_DIR: public
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Deploy to InfinityFree via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.3
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          server-dir: 'githubtest.free.nf/htdocs/'   # ví dụ: /htdocs/
-          local-dir: './'                       # upload toàn bộ repo
-          exclude: |
-            **/.git*
-            **/.github/**
-            README.md
+      - name: Show repo tree (debug)
+        run: |
+          echo "Repo root:"
+          ls -la
+          echo "Upload dir: $LOCAL_UPLOAD_DIR"
+          ls -la "$LOCAL_UPLOAD_DIR" || true
+
+      - name: Install lftp and sshpass (for sftp fallback)
+        run: sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y lftp sshpass
+
+      - name: Deploy (try FTPS -> FTP -> SFTP)
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+          FTP_TARGET: ${{ secrets.FTP_TARGET }}
+          LOCAL_UPLOAD_DIR: ${{ env.LOCAL_UPLOAD_DIR }}
+        run: |
+          set -e
+          echo "Attempting FTPS (explicit TLS on port 21)..."
+          lftp -u "$FTP_USER","$FTP_PASS" "$FTP_HOST" -e "set ftp:ssl-allow true; set ssl:verify-certificate false; mirror --reverse --delete --verbose \"$LOCAL_UPLOAD_DIR\" \"$FTP_TARGET\"; quit" \
+            && { echo "FTPS deploy succeeded"; exit 0; } || echo "FTPS failed, trying plain FTP..."
+
+          echo "Attempting plain FTP..."
+          lftp -u "$FTP_USER","$FTP_PASS" "$FTP_HOST" -e "set ftp:ssl-allow no; mirror --reverse --delete --verbose \"$LOCAL_UPLOAD_DIR\" \"$FTP_TARGET\"; quit" \
+            && { echo "FTP deploy succeeded"; exit 0; } || echo "Plain FTP failed, trying SFTP..."
+
+          echo "Attempting SFTP (using lftp sftp://)..."
+          lftp -u "$FTP_USER","$FTP_PASS" "sftp://$FTP_HOST" -e "mirror --reverse --delete --verbose \"$LOCAL_UPLOAD_DIR\" \"$FTP_TARGET\"; quit" \
+            && { echo "SFTP deploy succeeded"; exit 0; } || { echo "All methods failed"; exit 1; }
