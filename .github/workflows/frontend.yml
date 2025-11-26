@@ -1,0 +1,25 @@
+name: Deploy PHP site to InfinityFree (FTP)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to InfinityFree via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_TARGET }}    # ví dụ /htdocs
+          local-dir: .                             # upload toàn repo
+          exclude: |
+            .github
+            .git
+            .gitignore
