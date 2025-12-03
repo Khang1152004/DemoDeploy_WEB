@@ -14,14 +14,16 @@ class Mailer
         $mail = new PHPMailer(true);
         $mail->CharSet = 'UTF-8';
 
-        // Cấu hình SMTP
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
         $mail->Username   = SMTP_USER;
         $mail->Password   = SMTP_PASS;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // TLS
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = SMTP_PORT;
+
+        // Nếu cần gửi HTML thì bật:
+        $mail->isHTML(true);
 
         $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
 
@@ -33,7 +35,6 @@ class Mailer
         if (empty($emails)) return 0;
 
         $mail = self::createMailer();
-        $mail->isHTML(false);
         $mail->Subject = $subject;
         $mail->Body    = $body;
 
@@ -42,11 +43,8 @@ class Mailer
             $mail->clearAddresses();
             $mail->addAddress($email);
             try {
-                if ($mail->send()) {
-                    $sent++;
-                }
+                if ($mail->send()) $sent++;
             } catch (Exception $e) {
-                // Có thể log lỗi nếu muốn
                 // error_log('Mailer error: ' . $mail->ErrorInfo);
             }
         }
