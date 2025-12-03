@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   web:
     build: .
@@ -7,17 +9,17 @@ services:
       - db
     environment:
       DB_HOST: db
-      DB_NAME: app
+      DB_NAME: quanlytuyendungabc
       DB_USER: root
       DB_PASS: example
 
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: app
+      MYSQL_DATABASE: quanlytuyendungabc
       MYSQL_ROOT_PASSWORD: example
     ports:
-      - "3307:3306"   # đổi 3306 -> 3307
+      - "3307:3306"
     volumes:
       - dbdata:/var/lib/mysql
 
