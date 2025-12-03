@@ -1,10 +1,14 @@
 <?php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'quanlytuyendungabc');
+define('DB_HOST', 'sql308.infinityfree.com');
+define('DB_USER', 'if0_40245408');
+define('DB_PASS', 'GN6oIGrnv');
+define('DB_NAME', 'if0_40245408_quanlytuyendungabc');
 
-define('BASE_URL', 'http://localhost/Project/web/public/index.php');
+define('BASE_URL', $isProduction
+  ? 'http://khangstu2025.infinityfreeapp.com'
+  : 'http://localhost:8080'
+);
+
 
 // Cấu hình SMTP (tạm thời dùng Gmail làm ví dụ)
 define('SMTP_HOST', 'smtp.gmail.com');
