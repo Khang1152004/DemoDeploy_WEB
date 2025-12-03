@@ -23,7 +23,8 @@ class Mailer
         $mail->Port       = SMTP_PORT;
 
         // Nếu cần gửi HTML thì bật:
-        $mail->isHTML(true);
+       $mail->isHTML(false); // gửi text
+
 
         $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
 

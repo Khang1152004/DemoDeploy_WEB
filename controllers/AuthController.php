@@ -62,16 +62,17 @@ class AuthController extends Controller
                     $verifyLink = BASE_URL . "/index.php?c=Auth&a=verify&token=" . urlencode($token);
 
                     $subject = 'Xác nhận đăng ký tài khoản';
-                    $body = "
-            Chào bạn,<br><br>
-            Bạn vừa đăng ký tài khoản trên hệ thống tuyển dụng của chúng tôi.<br>
-            Vui lòng bấm vào liên kết sau để xác nhận email và kích hoạt tài khoản:<br><br>
-            <a href='{$verifyLink}'>{$verifyLink}</a><br><br>
-            Nếu bạn không thực hiện đăng ký, vui lòng bỏ qua email này.
-        ";
 
-                    // Gửi mail
+                    $body = "Chào bạn,\n\n"
+                        . "Bạn vừa đăng ký tài khoản trên hệ thống tuyển dụng của chúng tôi.\n\n"
+                        . "Vui lòng mở liên kết sau để xác nhận email và kích hoạt tài khoản:\n"
+                        . $verifyLink . "\n\n"
+                        . "Nếu bạn không thực hiện đăng ký, hãy bỏ qua email này.\n\n"
+                        . "Trân trọng,\n"
+                        . "Hệ thống tuyển dụng";
+
                     Mailer::sendToMany([$email], $subject, $body);
+
 
                     $success = 'Đăng ký thành công. Vui lòng kiểm tra email để xác nhận tài khoản.';
                 } else {
@@ -81,35 +82,36 @@ class AuthController extends Controller
         }
         $this->render('auth/register', compact('error', 'success'));
     }
-    public function verify() {
-    $success = false;
-    $message = null;
+    public function verify()
+    {
+        $success = false;
+        $message = null;
 
-    $token = $_GET['token'] ?? '';
-    $token = trim($token);
+        $token = $_GET['token'] ?? '';
+        $token = trim($token);
 
-    if ($token === '') {
-        $message = 'Liên kết xác nhận không hợp lệ.';
-        $this->render('auth/verify_result', compact('success','message'));
-        return;
-    }
-
-    $user = User::findByVerificationToken($token);
-    if (!$user) {
-        $message = 'Liên kết xác nhận không hợp lệ hoặc đã được sử dụng.';
-    } else {
-        if (isset($user['is_verified']) && (int)$user['is_verified'] === 1) {
-            $success = true;
-            $message = 'Tài khoản của bạn đã được xác nhận trước đó. Bạn có thể đăng nhập.';
-        } else {
-            User::markVerified($user['ma_nguoi_dung']);
-            $success = true;
-            $message = 'Xác nhận email thành công. Bạn có thể đăng nhập.';
+        if ($token === '') {
+            $message = 'Liên kết xác nhận không hợp lệ.';
+            $this->render('auth/verify_result', compact('success', 'message'));
+            return;
         }
-    }
 
-    $this->render('auth/verify_result', compact('success','message'));
-}
+        $user = User::findByVerificationToken($token);
+        if (!$user) {
+            $message = 'Liên kết xác nhận không hợp lệ hoặc đã được sử dụng.';
+        } else {
+            if (isset($user['is_verified']) && (int)$user['is_verified'] === 1) {
+                $success = true;
+                $message = 'Tài khoản của bạn đã được xác nhận trước đó. Bạn có thể đăng nhập.';
+            } else {
+                User::markVerified($user['ma_nguoi_dung']);
+                $success = true;
+                $message = 'Xác nhận email thành công. Bạn có thể đăng nhập.';
+            }
+        }
+
+        $this->render('auth/verify_result', compact('success', 'message'));
+    }
 
     public function logout()
     {
