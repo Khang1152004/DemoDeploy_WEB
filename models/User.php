@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/../core/Database.php';
 
-class User {
-    public static function findByEmail($email) {
+class User
+{
+    public static function findByEmail($email)
+    {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT * FROM nguoi_dung WHERE email = ?");
         $stmt->bind_param("s", $email);
@@ -10,7 +12,8 @@ class User {
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public static function findById($id) {
+    public static function findById($id)
+    {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT * FROM nguoi_dung WHERE ma_nguoi_dung = ?");
         $stmt->bind_param("i", $id);
@@ -18,18 +21,48 @@ class User {
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public static function register($email, $password, $role) {
+    public static function register($email, $password, $role, $token)
+    {
         $conn = Database::getConnection();
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("INSERT INTO nguoi_dung (email, mat_khau_hash, vai_tro) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $email, $hash, $role);
+        $isVerified = 0;
+
+        $stmt = $conn->prepare("
+        INSERT INTO nguoi_dung (email, mat_khau_hash, vai_tro, is_verified, verification_token)
+        VALUES (?, ?, ?, ?, ?)
+    ");
+        $stmt->bind_param("sssds", $email, $hash, $role, $isVerified, $token);
+
         if ($stmt->execute()) {
             return $conn->insert_id;
         }
         return false;
     }
+    public static function findByVerificationToken($token)
+    {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT * FROM nguoi_dung WHERE verification_token = ? LIMIT 1");
+        $stmt->bind_param("s", $token);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
 
-    public static function updatePassword($userId, $current, $new, $confirm) {
+    public static function markVerified($userId)
+    {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("
+        UPDATE nguoi_dung
+        SET is_verified = 1,
+            verification_token = NULL
+        WHERE ma_nguoi_dung = ?
+    ");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+    }
+
+
+    public static function updatePassword($userId, $current, $new, $confirm)
+    {
         $user = self::findById($userId);
         if (!$user) {
             return ['success' => false, 'message' => 'Không tìm thấy người dùng'];
@@ -49,14 +82,16 @@ class User {
     }
 
 
-    public static function countAll() {
+    public static function countAll()
+    {
         $conn = Database::getConnection();
         $res = $conn->query("SELECT COUNT(*) AS c FROM nguoi_dung");
         $row = $res->fetch_assoc();
         return (int)$row['c'];
     }
 
-    public static function countLocked() {
+    public static function countLocked()
+    {
         $conn = Database::getConnection();
         $res = $conn->query("SELECT COUNT(*) AS c FROM nguoi_dung WHERE trang_thai_hoat_dong = 0");
         $row = $res->fetch_assoc();
@@ -65,7 +100,8 @@ class User {
 
 
 
-    public static function all() {
+    public static function all()
+    {
         $conn = Database::getConnection();
         $res = $conn->query("SELECT * FROM nguoi_dung ORDER BY ma_nguoi_dung DESC");
         $rows = [];
@@ -77,7 +113,8 @@ class User {
         return $rows;
     }
 
-    public static function updateStatus($userId, $active) {
+    public static function updateStatus($userId, $active)
+    {
         $conn = Database::getConnection();
         $active = $active ? 1 : 0;
         $stmt = $conn->prepare("UPDATE nguoi_dung SET trang_thai_hoat_dong = ? WHERE ma_nguoi_dung = ?");
@@ -85,7 +122,8 @@ class User {
         return $stmt->execute();
     }
 
-    public static function countByRole($role) {
+    public static function countByRole($role)
+    {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM nguoi_dung WHERE vai_tro = ?");
         $stmt->bind_param("s", $role);
@@ -97,7 +135,8 @@ class User {
 
 
 
-    public static function updateEmailSubscription($userId, $subscribe) {
+    public static function updateEmailSubscription($userId, $subscribe)
+    {
         $conn = Database::getConnection();
         $subscribe = $subscribe ? 1 : 0;
         $stmt = $conn->prepare("UPDATE nguoi_dung SET nhan_email_tuyendung = ? WHERE ma_nguoi_dung = ?");
@@ -105,7 +144,8 @@ class User {
         return $stmt->execute();
     }
 
-    public static function getSubscribedEmails() {
+    public static function getSubscribedEmails()
+    {
         $conn = Database::getConnection();
         $sql = "SELECT email FROM nguoi_dung WHERE vai_tro = 'ung_vien' AND trang_thai_hoat_dong = 1 AND nhan_email_tuyendung = 1";
         $res = $conn->query($sql);
@@ -117,6 +157,4 @@ class User {
         }
         return $out;
     }
-
-
 }

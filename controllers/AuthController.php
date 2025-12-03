@@ -4,9 +4,13 @@ require_once __DIR__ . '/../core/Auth.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Candidate.php';
 require_once __DIR__ . '/../models/Employer.php';
+require_once __DIR__ . '/../core/Mailer.php';
 
-class AuthController extends Controller {
-    public function login() {
+
+class AuthController extends Controller
+{
+    public function login()
+    {
         $error = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim($_POST['email'] ?? '');
@@ -14,6 +18,8 @@ class AuthController extends Controller {
             $user = User::findByEmail($email);
             if (!$user || !password_verify($password, $user['mat_khau_hash'])) {
                 $error = 'Sai email hoặc mật khẩu';
+            } elseif (isset($user['is_verified']) && (int)$user['is_verified'] === 0) {
+                $error = 'Tài khoản của bạn chưa được xác nhận email. Vui lòng kiểm tra hộp thư.';
             } elseif ((int)$user['trang_thai_hoat_dong'] === 0) {
                 $error = 'Tài khoản của bạn đã bị khóa, vui lòng liên hệ quản trị viên.';
             } else {
@@ -24,8 +30,10 @@ class AuthController extends Controller {
         $this->render('auth/login', compact('error'));
     }
 
-    public function register() {
-        $error = null; $success = null;
+    public function register()
+    {
+        $error = null;
+        $success = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
@@ -37,20 +45,74 @@ class AuthController extends Controller {
             } elseif (User::findByEmail($email)) {
                 $error = 'Email đã tồn tại';
             } else {
-                $userId = User::register($email, $password, $role);
+                // Tạo token xác thực ngẫu nhiên
+                $token = bin2hex(random_bytes(32));
+
+                // Đăng ký user với is_verified = 0 + lưu token
+                $userId = User::register($email, $password, $role, $token);
                 if ($userId) {
-                    if ($role === 'ung_vien') Candidate::createProfile($userId);
-                    if ($role === 'doanh_nghiep') Employer::createProfile($userId);
-                    $success = 'Đăng ký thành công, hãy đăng nhập';
+                    // Tạo profile mặc định
+                    if ($role === 'ung_vien') {
+                        Candidate::createProfile($userId);
+                    } elseif ($role === 'doanh_nghiep') {
+                        Employer::createProfile($userId);
+                    }
+
+                    // Tạo link xác nhận
+                    $verifyLink = BASE_URL . "/index.php?c=Auth&a=verify&token=" . urlencode($token);
+
+                    $subject = 'Xác nhận đăng ký tài khoản';
+                    $body = "
+            Chào bạn,<br><br>
+            Bạn vừa đăng ký tài khoản trên hệ thống tuyển dụng của chúng tôi.<br>
+            Vui lòng bấm vào liên kết sau để xác nhận email và kích hoạt tài khoản:<br><br>
+            <a href='{$verifyLink}'>{$verifyLink}</a><br><br>
+            Nếu bạn không thực hiện đăng ký, vui lòng bỏ qua email này.
+        ";
+
+                    // Gửi mail
+                    Mailer::sendToMany([$email], $subject, $body);
+
+                    $success = 'Đăng ký thành công. Vui lòng kiểm tra email để xác nhận tài khoản.';
                 } else {
                     $error = 'Lỗi hệ thống, thử lại';
                 }
             }
         }
-        $this->render('auth/register', compact('error','success'));
+        $this->render('auth/register', compact('error', 'success'));
+    }
+    public function verify() {
+    $success = false;
+    $message = null;
+
+    $token = $_GET['token'] ?? '';
+    $token = trim($token);
+
+    if ($token === '') {
+        $message = 'Liên kết xác nhận không hợp lệ.';
+        $this->render('auth/verify_result', compact('success','message'));
+        return;
     }
 
-    public function logout() {
+    $user = User::findByVerificationToken($token);
+    if (!$user) {
+        $message = 'Liên kết xác nhận không hợp lệ hoặc đã được sử dụng.';
+    } else {
+        if (isset($user['is_verified']) && (int)$user['is_verified'] === 1) {
+            $success = true;
+            $message = 'Tài khoản của bạn đã được xác nhận trước đó. Bạn có thể đăng nhập.';
+        } else {
+            User::markVerified($user['ma_nguoi_dung']);
+            $success = true;
+            $message = 'Xác nhận email thành công. Bạn có thể đăng nhập.';
+        }
+    }
+
+    $this->render('auth/verify_result', compact('success','message'));
+}
+
+    public function logout()
+    {
         Auth::logout();
         $this->redirect(['c' => 'Home', 'a' => 'index']);
     }

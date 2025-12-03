@@ -1,13 +1,14 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 4.9.0.1
 -- https://www.phpmyadmin.net/
 --
--- Máy chủ: 127.0.0.1:3306
--- Thời gian đã tạo: Th12 03, 2025 lúc 05:06 AM
--- Phiên bản máy phục vụ: 9.1.0
--- Phiên bản PHP: 8.3.14
+-- Máy chủ: sql308.infinityfree.com
+-- Thời gian đã tạo: Th12 03, 2025 lúc 11:07 AM
+-- Phiên bản máy phục vụ: 11.4.7-MariaDB
+-- Phiên bản PHP: 7.2.22
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -18,52 +19,8 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Cơ sở dữ liệu: `quanlytuyendungabc`
+-- Cơ sở dữ liệu: `if0_40245408_quanlytuyendungabc`
 --
-
-DELIMITER $$
---
--- Thủ tục
---
-DROP PROCEDURE IF EXISTS `drop_all_fks`$$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `drop_all_fks` (IN `dbname` VARCHAR(64))   BEGIN
-    DECLARE done INT DEFAULT 0;
-    DECLARE v_table VARCHAR(64);
-    DECLARE v_constraint VARCHAR(64);
-
-    DECLARE cur CURSOR FOR
-        SELECT TABLE_NAME, CONSTRAINT_NAME
-        FROM information_schema.KEY_COLUMN_USAGE
-        WHERE TABLE_SCHEMA = dbname
-          AND REFERENCED_TABLE_NAME IS NOT NULL;
-
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-
-    SET FOREIGN_KEY_CHECKS = 0;
-
-    OPEN cur;
-    read_loop: LOOP
-        FETCH cur INTO v_table, v_constraint;
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
-
-        SET @sql = CONCAT(
-            'ALTER TABLE `', dbname, '`.`', v_table,
-            '` DROP FOREIGN KEY `', v_constraint, '`'
-        );
-
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END LOOP;
-
-    CLOSE cur;
-
-    SET FOREIGN_KEY_CHECKS = 1;
-END$$
-
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -71,12 +28,9 @@ DELIMITER ;
 -- Cấu trúc bảng cho bảng `cv_kynang`
 --
 
-DROP TABLE IF EXISTS `cv_kynang`;
-CREATE TABLE IF NOT EXISTS `cv_kynang` (
-  `ma_cv` int NOT NULL,
-  `ma_ky_nang` int NOT NULL,
-  PRIMARY KEY (`ma_cv`,`ma_ky_nang`),
-  KEY `fk_ck_kynang` (`ma_ky_nang`)
+CREATE TABLE `cv_kynang` (
+  `ma_cv` int(11) NOT NULL,
+  `ma_ky_nang` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -94,13 +48,11 @@ INSERT INTO `cv_kynang` (`ma_cv`, `ma_ky_nang`) VALUES
 -- Cấu trúc bảng cho bảng `danh_muc`
 --
 
-DROP TABLE IF EXISTS `danh_muc`;
-CREATE TABLE IF NOT EXISTS `danh_muc` (
-  `ma_danh_muc` int NOT NULL AUTO_INCREMENT,
-  `ten_danh_muc` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `loai_danh_muc` enum('linh_vuc','dia_diem') COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (`ma_danh_muc`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `danh_muc` (
+  `ma_danh_muc` int(11) NOT NULL,
+  `ten_danh_muc` varchar(100) NOT NULL,
+  `loai_danh_muc` enum('linh_vuc','dia_diem') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `danh_muc`
@@ -119,14 +71,12 @@ INSERT INTO `danh_muc` (`ma_danh_muc`, `ten_danh_muc`, `loai_danh_muc`) VALUES
 -- Cấu trúc bảng cho bảng `doanh_nghiep`
 --
 
-DROP TABLE IF EXISTS `doanh_nghiep`;
-CREATE TABLE IF NOT EXISTS `doanh_nghiep` (
-  `ma_doanh_nghiep` int NOT NULL,
-  `ten_cong_ty` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `dia_chi` text COLLATE utf8mb4_general_ci,
-  `mo_ta` text COLLATE utf8mb4_general_ci,
-  `trang_thai_duyet` enum('pending','approved','rejected') COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  PRIMARY KEY (`ma_doanh_nghiep`)
+CREATE TABLE `doanh_nghiep` (
+  `ma_doanh_nghiep` int(11) NOT NULL,
+  `ten_cong_ty` varchar(100) DEFAULT NULL,
+  `dia_chi` text DEFAULT NULL,
+  `mo_ta` text DEFAULT NULL,
+  `trang_thai_duyet` enum('pending','approved','rejected') DEFAULT 'pending'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -136,7 +86,8 @@ CREATE TABLE IF NOT EXISTS `doanh_nghiep` (
 INSERT INTO `doanh_nghiep` (`ma_doanh_nghiep`, `ten_cong_ty`, `dia_chi`, `mo_ta`, `trang_thai_duyet`) VALUES
 (2, 'Công ty ABC', 'Hà Nội', 'Công ty phần mềm', 'approved'),
 (3, 'Công ty XYZ', 'TP. HCM', 'Công ty Marketing', 'approved'),
-(6, NULL, NULL, NULL, 'approved');
+(6, NULL, NULL, NULL, 'approved'),
+(10, NULL, NULL, NULL, 'approved');
 
 -- --------------------------------------------------------
 
@@ -144,21 +95,17 @@ INSERT INTO `doanh_nghiep` (`ma_doanh_nghiep`, `ten_cong_ty`, `dia_chi`, `mo_ta`
 -- Cấu trúc bảng cho bảng `don_ung_tuyen`
 --
 
-DROP TABLE IF EXISTS `don_ung_tuyen`;
-CREATE TABLE IF NOT EXISTS `don_ung_tuyen` (
-  `ma_don` int NOT NULL AUTO_INCREMENT,
-  `ma_tin_tuyen_dung` int DEFAULT NULL,
-  `ma_ung_vien` int DEFAULT NULL,
+CREATE TABLE `don_ung_tuyen` (
+  `ma_don` int(11) NOT NULL,
+  `ma_tin_tuyen_dung` int(11) DEFAULT NULL,
+  `ma_ung_vien` int(11) DEFAULT NULL,
   `ngay_nop` date DEFAULT NULL,
-  `trang_thai` enum('submitted','in_review','interview','rejected') COLLATE utf8mb4_general_ci DEFAULT 'submitted',
-  `email_lien_he` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `sdt_lien_he` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `cv_file` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `ho_ten_lien_he` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  PRIMARY KEY (`ma_don`),
-  KEY `fk_don_ttd` (`ma_tin_tuyen_dung`),
-  KEY `fk_don_ungvien` (`ma_ung_vien`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `trang_thai` enum('submitted','in_review','interview','rejected') DEFAULT 'submitted',
+  `email_lien_he` varchar(100) DEFAULT NULL,
+  `sdt_lien_he` varchar(20) DEFAULT NULL,
+  `cv_file` varchar(255) DEFAULT NULL,
+  `ho_ten_lien_he` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `don_ung_tuyen`
@@ -177,16 +124,12 @@ INSERT INTO `don_ung_tuyen` (`ma_don`, `ma_tin_tuyen_dung`, `ma_ung_vien`, `ngay
 -- Cấu trúc bảng cho bảng `ho_so_cv`
 --
 
-DROP TABLE IF EXISTS `ho_so_cv`;
-CREATE TABLE IF NOT EXISTS `ho_so_cv` (
-  `ma_cv` int NOT NULL AUTO_INCREMENT,
-  `ma_ung_vien` int NOT NULL,
-  `ma_linh_vuc` int DEFAULT NULL,
-  `file_cv` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (`ma_cv`),
-  KEY `fk_cv_ungvien` (`ma_ung_vien`),
-  KEY `fk_cv_linhvuc` (`ma_linh_vuc`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `ho_so_cv` (
+  `ma_cv` int(11) NOT NULL,
+  `ma_ung_vien` int(11) NOT NULL,
+  `ma_linh_vuc` int(11) DEFAULT NULL,
+  `file_cv` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `ho_so_cv`
@@ -202,14 +145,11 @@ INSERT INTO `ho_so_cv` (`ma_cv`, `ma_ung_vien`, `ma_linh_vuc`, `file_cv`) VALUES
 -- Cấu trúc bảng cho bảng `ky_nang`
 --
 
-DROP TABLE IF EXISTS `ky_nang`;
-CREATE TABLE IF NOT EXISTS `ky_nang` (
-  `ma_ky_nang` int NOT NULL AUTO_INCREMENT,
-  `ten_ky_nang` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `ma_linh_vuc` int DEFAULT NULL,
-  PRIMARY KEY (`ma_ky_nang`),
-  KEY `fk_kynang_linhvuc` (`ma_linh_vuc`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `ky_nang` (
+  `ma_ky_nang` int(11) NOT NULL,
+  `ten_ky_nang` varchar(100) NOT NULL,
+  `ma_linh_vuc` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `ky_nang`
@@ -227,12 +167,10 @@ INSERT INTO `ky_nang` (`ma_ky_nang`, `ten_ky_nang`, `ma_linh_vuc`) VALUES
 -- Cấu trúc bảng cho bảng `linh_vuc`
 --
 
-DROP TABLE IF EXISTS `linh_vuc`;
-CREATE TABLE IF NOT EXISTS `linh_vuc` (
-  `ma_linh_vuc` int NOT NULL AUTO_INCREMENT,
-  `ten_linh_vuc` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (`ma_linh_vuc`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `linh_vuc` (
+  `ma_linh_vuc` int(11) NOT NULL,
+  `ten_linh_vuc` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `linh_vuc`
@@ -249,32 +187,33 @@ INSERT INTO `linh_vuc` (`ma_linh_vuc`, `ten_linh_vuc`) VALUES
 -- Cấu trúc bảng cho bảng `nguoi_dung`
 --
 
-DROP TABLE IF EXISTS `nguoi_dung`;
-CREATE TABLE IF NOT EXISTS `nguoi_dung` (
-  `ma_nguoi_dung` int NOT NULL AUTO_INCREMENT,
-  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `mat_khau_hash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `vai_tro` enum('ung_vien','doanh_nghiep','admin') COLLATE utf8mb4_general_ci NOT NULL,
-  `trang_thai_hoat_dong` tinyint(1) DEFAULT '1',
-  `nhan_email_tuyendung` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`ma_nguoi_dung`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `nguoi_dung` (
+  `ma_nguoi_dung` int(11) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `mat_khau_hash` varchar(255) NOT NULL,
+  `vai_tro` enum('ung_vien','doanh_nghiep','admin') NOT NULL,
+  `trang_thai_hoat_dong` tinyint(1) DEFAULT 1,
+  `nhan_email_tuyendung` tinyint(1) NOT NULL DEFAULT 0,
+  `is_verified` tinyint(1) NOT NULL DEFAULT 0,
+  `verification_token` varchar(64) DEFAULT NULL,
+  `verification_expires` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `nguoi_dung`
 --
 
-INSERT INTO `nguoi_dung` (`ma_nguoi_dung`, `email`, `mat_khau_hash`, `vai_tro`, `trang_thai_hoat_dong`, `nhan_email_tuyendung`) VALUES
-(1, 'admin@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'admin', 1, 0),
-(2, 'company1@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'doanh_nghiep', 0, 0),
-(3, 'company2@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'doanh_nghiep', 1, 0),
-(4, 'candidate1@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'ung_vien', 1, 0),
-(5, 'candidate2@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'ung_vien', 1, 0),
-(6, 'company3@test.com', '$2y$10$HCUHiQSg/PXchTVwFR6zOuS21tWKmoGO8yQfYAT7A6wfYGHWa4y9W', 'doanh_nghiep', 1, 0),
-(7, 'khang0867775510@gmail.com', '$2y$10$uxhEzd1tPHZaRK4lGjeCBOECKifACIeTlxqX6LMIE5Y0IoM.aHmfq', 'ung_vien', 1, 1),
-(8, 'candidate3@test.com', '$2y$10$vav9K1mHLsSI89cpG2CZtuWYtAMuOM2zhuDb/bAKPt1njFuQU7RZm', 'ung_vien', 1, 0),
-(9, 'candidate4@test.com', '$2y$10$1XCcfCdbpflCtWCW9S8RDu4xP5AIBnmfjJK8WvRGEfqUReuWvOmwS', 'ung_vien', 1, 0);
+INSERT INTO `nguoi_dung` (`ma_nguoi_dung`, `email`, `mat_khau_hash`, `vai_tro`, `trang_thai_hoat_dong`, `nhan_email_tuyendung`, `is_verified`, `verification_token`, `verification_expires`) VALUES
+(1, 'admin@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'admin', 1, 0, 0, NULL, NULL),
+(2, 'company1@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'doanh_nghiep', 0, 0, 0, NULL, NULL),
+(3, 'company2@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'doanh_nghiep', 1, 0, 0, NULL, NULL),
+(4, 'candidate1@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'ung_vien', 1, 0, 0, NULL, NULL),
+(5, 'candidate2@test.com', '$2b$10$ZF08I06wtpAHw2MWFrXcquuer2.KuIs/wQKSSCyIMFhkeIuUp29CW', 'ung_vien', 1, 0, 0, NULL, NULL),
+(6, 'company3@test.com', '$2y$10$HCUHiQSg/PXchTVwFR6zOuS21tWKmoGO8yQfYAT7A6wfYGHWa4y9W', 'doanh_nghiep', 1, 0, 0, NULL, NULL),
+(7, 'khang0867775510@gmail.com', '$2y$10$uxhEzd1tPHZaRK4lGjeCBOECKifACIeTlxqX6LMIE5Y0IoM.aHmfq', 'ung_vien', 1, 1, 0, NULL, NULL),
+(8, 'candidate3@test.com', '$2y$10$vav9K1mHLsSI89cpG2CZtuWYtAMuOM2zhuDb/bAKPt1njFuQU7RZm', 'ung_vien', 1, 0, 0, NULL, NULL),
+(9, 'candidate4@test.com', '$2y$10$1XCcfCdbpflCtWCW9S8RDu4xP5AIBnmfjJK8WvRGEfqUReuWvOmwS', 'ung_vien', 1, 0, 0, NULL, NULL),
+(10, 'hothanhkhai145@gmail.com', '$2y$10$WKOFrWlJ0bI/1Tr3nL2JK.cnhRNGqo30KbOA39v85C5aqWqEhdKY6', 'doanh_nghiep', 1, 0, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -282,17 +221,14 @@ INSERT INTO `nguoi_dung` (`ma_nguoi_dung`, `email`, `mat_khau_hash`, `vai_tro`, 
 -- Cấu trúc bảng cho bảng `thong_bao`
 --
 
-DROP TABLE IF EXISTS `thong_bao`;
-CREATE TABLE IF NOT EXISTS `thong_bao` (
-  `ma_thong_bao` int NOT NULL AUTO_INCREMENT,
-  `ma_nguoi_nhan` int NOT NULL,
-  `noi_dung` text COLLATE utf8mb4_general_ci NOT NULL,
-  `link` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `da_xem` tinyint DEFAULT '0',
-  `thoi_gian_tao` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`ma_thong_bao`),
-  KEY `fk_thongbao_nguoidung` (`ma_nguoi_nhan`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `thong_bao` (
+  `ma_thong_bao` int(11) NOT NULL,
+  `ma_nguoi_nhan` int(11) NOT NULL,
+  `noi_dung` text NOT NULL,
+  `link` varchar(255) DEFAULT NULL,
+  `da_xem` tinyint(4) DEFAULT 0,
+  `thoi_gian_tao` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `thong_bao`
@@ -317,19 +253,33 @@ INSERT INTO `thong_bao` (`ma_thong_bao`, `ma_nguoi_nhan`, `noi_dung`, `link`, `d
 (16, 3, 'Tin \'HR Executive\' đã được xóa theo yêu cầu', 'index.php?c=Employer&a=jobs', 1, '2025-12-02 18:25:55'),
 (17, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-02 18:29:56'),
 (18, 1, 'Doanh nghiệp yêu cầu xóa tin \'PHP dev full Stack\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 1, '2025-12-02 18:31:28'),
-(19, 3, 'Yêu cầu xóa tin \'PHP dev full Stack\' đã bị từ chối', 'index.php?c=Employer&a=jobs', 0, '2025-12-02 18:31:51'),
+(19, 3, 'Yêu cầu xóa tin \'PHP dev full Stack\' đã bị từ chối', 'index.php?c=Employer&a=jobs', 1, '2025-12-02 18:31:51'),
 (20, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-02 18:57:13'),
 (21, 6, 'Tin \'PHP dev\' đã được duyệt', 'index.php?c=Employer&a=jobs', 0, '2025-12-02 18:57:36'),
 (22, 6, 'Tin \'PHP dev\' đã được duyệt', 'index.php?c=Employer&a=jobs', 0, '2025-12-02 18:57:41'),
-(23, 1, 'Doanh nghiệp yêu cầu xóa tin \'PHP dev full Stack\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 0, '2025-12-02 19:11:36'),
-(24, 1, 'Doanh nghiệp yêu cầu xóa tin \'JAVA DEF Giỏi về Frontend\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 0, '2025-12-02 19:13:18'),
-(25, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 0, '2025-12-02 19:14:11'),
-(26, 3, 'Tin \'PHP dev full Stack\' đã được xóa theo yêu cầu', 'index.php?c=Employer&a=jobs', 0, '2025-12-02 19:17:21'),
-(27, 1, 'Doanh nghiệp yêu cầu xóa tin \'PHP dev\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 0, '2025-12-02 19:19:51'),
+(23, 1, 'Doanh nghiệp yêu cầu xóa tin \'PHP dev full Stack\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 1, '2025-12-02 19:11:36'),
+(24, 1, 'Doanh nghiệp yêu cầu xóa tin \'JAVA DEF Giỏi về Frontend\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 1, '2025-12-02 19:13:18'),
+(25, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-02 19:14:11'),
+(26, 3, 'Tin \'PHP dev full Stack\' đã được xóa theo yêu cầu', 'index.php?c=Employer&a=jobs', 1, '2025-12-02 19:17:21'),
+(27, 1, 'Doanh nghiệp yêu cầu xóa tin \'PHP dev\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 1, '2025-12-02 19:19:51'),
 (28, 6, 'Bạn đã gửi yêu cầu xóa tin \'PHP dev\'', 'index.php?c=Employer&a=jobs', 0, '2025-12-02 19:19:51'),
-(29, 3, 'Tin \'PHP dev full Stack\' đã được duyệt', 'index.php?c=Employer&a=jobs', 0, '2025-12-02 22:06:34'),
+(29, 3, 'Tin \'PHP dev full Stack\' đã được duyệt', 'index.php?c=Employer&a=jobs', 1, '2025-12-02 22:06:34'),
 (30, 6, 'Tin \'PHP dev\' đã được xóa theo yêu cầu', 'index.php?c=Employer&a=jobs', 0, '2025-12-02 22:06:47'),
-(31, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 0, '2025-12-02 22:08:13');
+(31, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-02 22:08:13'),
+(32, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-03 02:57:36'),
+(33, 3, 'Tin \'PHP dev\' đã được duyệt', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 03:08:43'),
+(34, 3, 'Tin \'PHP dev\' đã được duyệt', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 03:09:10'),
+(35, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-03 03:30:32'),
+(36, 3, 'Tin \'PHP dev\' đã được duyệt', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 03:30:48'),
+(37, 3, 'Tin \'PHP dev\' đã được duyệt', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 03:30:53'),
+(38, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-03 07:54:38'),
+(39, 3, 'Tin \'Giúp việc\' đã được duyệt', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 07:54:59'),
+(40, 1, 'Doanh nghiệp yêu cầu xóa tin \'Giúp việc\'', 'index.php?c=Admin&a=jobs&status=delete_pending', 1, '2025-12-03 07:56:25'),
+(41, 3, 'Bạn đã gửi yêu cầu xóa tin \'Giúp việc\'', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 07:56:25'),
+(42, 3, 'Tin \'Giúp việc\' đã được xóa theo yêu cầu', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 07:56:46'),
+(43, 3, 'Yêu cầu xóa tin \'JAVA DEF Giỏi về Frontend\' đã bị từ chối', 'index.php?c=Employer&a=jobs', 1, '2025-12-03 07:56:54'),
+(44, 1, 'Tin tuyển dụng mới cần duyệt', 'index.php?c=Admin&a=jobs&status=pending', 1, '2025-12-03 08:04:09'),
+(45, 3, 'Tin \'Giúp việc\' đã được duyệt', 'index.php?c=Employer&a=jobs', 0, '2025-12-03 08:04:30');
 
 -- --------------------------------------------------------
 
@@ -337,23 +287,18 @@ INSERT INTO `thong_bao` (`ma_thong_bao`, `ma_nguoi_nhan`, `noi_dung`, `link`, `d
 -- Cấu trúc bảng cho bảng `tin_tuyen_dung`
 --
 
-DROP TABLE IF EXISTS `tin_tuyen_dung`;
-CREATE TABLE IF NOT EXISTS `tin_tuyen_dung` (
-  `ma_tin_tuyen_dung` int NOT NULL AUTO_INCREMENT,
-  `ma_doanh_nghiep` int DEFAULT NULL,
-  `tieu_de` varchar(200) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `mo_ta_cong_viec` text COLLATE utf8mb4_general_ci,
-  `yeu_cau_ung_vien` text COLLATE utf8mb4_general_ci,
-  `muc_luong_khoang` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `ma_linh_vuc` int DEFAULT NULL,
-  `ma_dia_diem` int DEFAULT NULL,
+CREATE TABLE `tin_tuyen_dung` (
+  `ma_tin_tuyen_dung` int(11) NOT NULL,
+  `ma_doanh_nghiep` int(11) DEFAULT NULL,
+  `tieu_de` varchar(200) DEFAULT NULL,
+  `mo_ta_cong_viec` text DEFAULT NULL,
+  `yeu_cau_ung_vien` text DEFAULT NULL,
+  `muc_luong_khoang` varchar(100) DEFAULT NULL,
+  `ma_linh_vuc` int(11) DEFAULT NULL,
+  `ma_dia_diem` int(11) DEFAULT NULL,
   `han_nop_ho_so` date DEFAULT NULL,
-  `trang_thai_tin_dang` enum('pending','approved','rejected','delete_pending','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  PRIMARY KEY (`ma_tin_tuyen_dung`),
-  KEY `fk_ttd_doanhnghiep` (`ma_doanh_nghiep`),
-  KEY `fk_ttd_linhvuc` (`ma_linh_vuc`),
-  KEY `fk_ttd_diadiem` (`ma_dia_diem`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `trang_thai_tin_dang` enum('pending','approved','rejected','delete_pending','deleted') DEFAULT 'pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `tin_tuyen_dung`
@@ -365,12 +310,16 @@ INSERT INTO `tin_tuyen_dung` (`ma_tin_tuyen_dung`, `ma_doanh_nghiep`, `tieu_de`,
 (3, 3, 'HR Executive', 'Tuyển dụng nhân sự', 'Có kinh nghiệm tuyển dụng', '12-18 triệu', 3, 4, '2025-12-20', 'deleted'),
 (4, 3, 'Laravel Developer', 'Dự án nội bộ', 'Biết Laravel', '18-25 triệu', 1, 5, '2025-12-22', 'rejected'),
 (5, 2, 'PHP dev', 'saddsa', 'ádsa', '10 trieu', 3, NULL, '2026-01-03', 'approved'),
-(6, 3, 'JAVA DEF Giỏi về Frontend', 'Lam front end', '>30 tuoi', '20 trieu', 1, NULL, '2025-12-02', 'delete_pending'),
+(6, 3, 'JAVA DEF Giỏi về Frontend', 'Lam front end', '>30 tuoi', '20 trieu', 1, NULL, '2025-12-02', 'approved'),
 (7, 3, 'PHP dev full Stack', 'php full stack gánh cả đội', 'trên 25 tuổi', '25 triệu', 1, NULL, '2025-12-27', 'deleted'),
 (8, 3, 'PHP dev full Stack', '12321', '3213', '10 trieu', 1, NULL, '2025-12-04', 'approved'),
 (9, 6, 'PHP dev', '123', '123', '10 trieu', 1, 5, '2025-12-27', 'deleted'),
-(10, 3, 'PHP dev', '123', '123', '10 trieu', 1, 5, '2025-12-03', 'pending'),
-(11, 3, 'PHP dev', '123', '123', '123', 1, 5, '2025-12-26', 'pending');
+(10, 3, 'PHP dev', '123', '123', '10 trieu', 1, 5, '2025-12-03', 'approved'),
+(11, 3, 'PHP dev', '123', '123', '123', 1, 5, '2025-12-26', 'approved'),
+(12, 3, 'PHP dev', '123', '123', '123', 1, 5, '2025-12-27', 'approved'),
+(13, 3, 'PHP dev', '21321', '123', '10 trieu', 1, 5, '2025-12-27', 'approved'),
+(15, 3, 'Giúp việc', 'Giúp việc tại nhà', 'Nữ >35 tuổi', '20 triệu', 1, 5, '2025-12-31', 'deleted'),
+(16, 3, 'Giúp việc', '123', '123', '123', 2, 4, '2025-12-31', 'approved');
 
 -- --------------------------------------------------------
 
@@ -378,15 +327,13 @@ INSERT INTO `tin_tuyen_dung` (`ma_tin_tuyen_dung`, `ma_doanh_nghiep`, `tieu_de`,
 -- Cấu trúc bảng cho bảng `ung_vien`
 --
 
-DROP TABLE IF EXISTS `ung_vien`;
-CREATE TABLE IF NOT EXISTS `ung_vien` (
-  `ma_ung_vien` int NOT NULL,
-  `ho_ten` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `sdt` varchar(20) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `dia_chi` text COLLATE utf8mb4_general_ci,
-  `mo_ta_ngan` text COLLATE utf8mb4_general_ci,
-  `muc_luong_mong_muon` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  PRIMARY KEY (`ma_ung_vien`)
+CREATE TABLE `ung_vien` (
+  `ma_ung_vien` int(11) NOT NULL,
+  `ho_ten` varchar(100) DEFAULT NULL,
+  `sdt` varchar(20) DEFAULT NULL,
+  `dia_chi` text DEFAULT NULL,
+  `mo_ta_ngan` text DEFAULT NULL,
+  `muc_luong_mong_muon` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -399,6 +346,139 @@ INSERT INTO `ung_vien` (`ma_ung_vien`, `ho_ten`, `sdt`, `dia_chi`, `mo_ta_ngan`,
 (7, 'Nguyen Huu Khang', '0867775510', 'HCM', '', ''),
 (8, NULL, NULL, NULL, NULL, NULL),
 (9, NULL, NULL, NULL, NULL, NULL);
+
+--
+-- Chỉ mục cho các bảng đã đổ
+--
+
+--
+-- Chỉ mục cho bảng `cv_kynang`
+--
+ALTER TABLE `cv_kynang`
+  ADD PRIMARY KEY (`ma_cv`,`ma_ky_nang`),
+  ADD KEY `fk_ck_kynang` (`ma_ky_nang`);
+
+--
+-- Chỉ mục cho bảng `danh_muc`
+--
+ALTER TABLE `danh_muc`
+  ADD PRIMARY KEY (`ma_danh_muc`);
+
+--
+-- Chỉ mục cho bảng `doanh_nghiep`
+--
+ALTER TABLE `doanh_nghiep`
+  ADD PRIMARY KEY (`ma_doanh_nghiep`);
+
+--
+-- Chỉ mục cho bảng `don_ung_tuyen`
+--
+ALTER TABLE `don_ung_tuyen`
+  ADD PRIMARY KEY (`ma_don`),
+  ADD KEY `fk_don_ttd` (`ma_tin_tuyen_dung`),
+  ADD KEY `fk_don_ungvien` (`ma_ung_vien`);
+
+--
+-- Chỉ mục cho bảng `ho_so_cv`
+--
+ALTER TABLE `ho_so_cv`
+  ADD PRIMARY KEY (`ma_cv`),
+  ADD KEY `fk_cv_ungvien` (`ma_ung_vien`),
+  ADD KEY `fk_cv_linhvuc` (`ma_linh_vuc`);
+
+--
+-- Chỉ mục cho bảng `ky_nang`
+--
+ALTER TABLE `ky_nang`
+  ADD PRIMARY KEY (`ma_ky_nang`),
+  ADD KEY `fk_kynang_linhvuc` (`ma_linh_vuc`);
+
+--
+-- Chỉ mục cho bảng `linh_vuc`
+--
+ALTER TABLE `linh_vuc`
+  ADD PRIMARY KEY (`ma_linh_vuc`);
+
+--
+-- Chỉ mục cho bảng `nguoi_dung`
+--
+ALTER TABLE `nguoi_dung`
+  ADD PRIMARY KEY (`ma_nguoi_dung`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Chỉ mục cho bảng `thong_bao`
+--
+ALTER TABLE `thong_bao`
+  ADD PRIMARY KEY (`ma_thong_bao`),
+  ADD KEY `fk_thongbao_nguoidung` (`ma_nguoi_nhan`);
+
+--
+-- Chỉ mục cho bảng `tin_tuyen_dung`
+--
+ALTER TABLE `tin_tuyen_dung`
+  ADD PRIMARY KEY (`ma_tin_tuyen_dung`),
+  ADD KEY `fk_ttd_doanhnghiep` (`ma_doanh_nghiep`),
+  ADD KEY `fk_ttd_linhvuc` (`ma_linh_vuc`),
+  ADD KEY `fk_ttd_diadiem` (`ma_dia_diem`);
+
+--
+-- Chỉ mục cho bảng `ung_vien`
+--
+ALTER TABLE `ung_vien`
+  ADD PRIMARY KEY (`ma_ung_vien`);
+
+--
+-- AUTO_INCREMENT cho các bảng đã đổ
+--
+
+--
+-- AUTO_INCREMENT cho bảng `danh_muc`
+--
+ALTER TABLE `danh_muc`
+  MODIFY `ma_danh_muc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT cho bảng `don_ung_tuyen`
+--
+ALTER TABLE `don_ung_tuyen`
+  MODIFY `ma_don` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT cho bảng `ho_so_cv`
+--
+ALTER TABLE `ho_so_cv`
+  MODIFY `ma_cv` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT cho bảng `ky_nang`
+--
+ALTER TABLE `ky_nang`
+  MODIFY `ma_ky_nang` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT cho bảng `linh_vuc`
+--
+ALTER TABLE `linh_vuc`
+  MODIFY `ma_linh_vuc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT cho bảng `nguoi_dung`
+--
+ALTER TABLE `nguoi_dung`
+  MODIFY `ma_nguoi_dung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT cho bảng `thong_bao`
+--
+ALTER TABLE `thong_bao`
+  MODIFY `ma_thong_bao` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+
+--
+-- AUTO_INCREMENT cho bảng `tin_tuyen_dung`
+--
+ALTER TABLE `tin_tuyen_dung`
+  MODIFY `ma_tin_tuyen_dung` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
