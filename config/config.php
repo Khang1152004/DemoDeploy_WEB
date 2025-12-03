@@ -1,4 +1,8 @@
 <?php
+$isProduction = isset($_SERVER['HTTP_HOST']) &&
+                $_SERVER['HTTP_HOST'] === 'khangstu2025.infinityfreeapp.com';?>
+
+<?php
 define('DB_HOST', 'sql308.infinityfree.com');
 define('DB_USER', 'if0_40245408');
 define('DB_PASS', 'GN6oIGrnv');
