@@ -2,46 +2,66 @@
 require_once __DIR__ . '/../core/Database.php';
 
 class Notification {
+    // Tạo thông báo mới
     public static function create($userId, $message, $link = null) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("INSERT INTO thong_bao (ma_nguoi_nhan, noi_dung, link) VALUES (?,?,?)");
         $stmt->bind_param("iss", $userId, $message, $link);
         $stmt->execute();
+        $stmt->close();
     }
 
-        public static function unread($userId, $limit = 10) {
+    // Lấy danh sách THÔNG BÁO CHƯA ĐỌC (dropdown)
+    public static function unread($userId, $limit = 10) {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT ma_thong_bao, noi_dung, link, da_xem, thoi_gian_tao
-                               FROM thong_bao
-                               WHERE ma_nguoi_nhan = ? AND da_xem = 0
-                               ORDER BY thoi_gian_tao DESC
-                               LIMIT ?");
+        $stmt = $conn->prepare("
+            SELECT ma_thong_bao, noi_dung, link, da_xem, thoi_gian_tao
+            FROM thong_bao
+            WHERE ma_nguoi_nhan = ? AND da_xem = 0
+            ORDER BY thoi_gian_tao DESC
+            LIMIT ?
+        ");
         $stmt->bind_param("ii", $userId, $limit);
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $result = $stmt->get_result();
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $rows;
     }
 
+    // Đếm số thông báo chưa đọc (hiện badge)
     public static function countUnread($userId) {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM thong_bao WHERE ma_nguoi_nhan = ? AND da_xem = 0");
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) AS c
+            FROM thong_bao
+            WHERE ma_nguoi_nhan = ? AND da_xem = 0
+        ");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
         return (int)$row['c'];
     }
 
+    // Đánh dấu TẤT CẢ đã đọc cho 1 user
     public static function markAllRead($userId) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("UPDATE thong_bao SET da_xem = 1 WHERE ma_nguoi_nhan = ?");
         $stmt->bind_param("i", $userId);
         $stmt->execute();
+        $stmt->close();
     }
 
-public static function notifyAdmins($message, $link = null) {
+    // Gửi thông báo cho tất cả admin (đã được EmployerController dùng)
+    public static function notifyAdmins($message, $link = null) {
         $conn = Database::getConnection();
-        $res = $conn->query("SELECT ma_nguoi_dung FROM nguoi_dung WHERE vai_tro = 'admin'");
+        $sql = "SELECT ma_nguoi_dung FROM nguoi_dung WHERE vai_tro = 'admin'";
+        $res = $conn->query($sql);
         while ($row = $res->fetch_assoc()) {
             self::create((int)$row['ma_nguoi_dung'], $message, $link);
         }
+        $res->free();
     }
 }
