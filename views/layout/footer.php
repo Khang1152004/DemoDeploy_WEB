@@ -23,15 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function toggleNotifMenu() {
     if (!notifMenuWrapper) return;
     notifMenuWrapper.classList.toggle('hidden');
-
-    // Khi mở menu -> đánh dấu tất cả đã đọc + ẩn badge
-    if (!notifMenuWrapper.classList.contains('hidden')) {
-      fetch('index.php?c=Notification&a=markRead')
-        .then(function () {
-          if (notifCount) notifCount.classList.add('hidden');
-        })
-        .catch(function () {});
-    }
+    // KHÔNG mark all read khi mở menu nữa
   }
 
   function toggleUserMenu() {
@@ -53,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Load danh sách thông báo
   function loadNotifications() {
     if (!notifMenu) return;
 
@@ -61,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function (data) {
         var items = (data && Array.isArray(data.items)) ? data.items : [];
 
-        // Xóa các item cũ (giữ lại notifEmpty)
+        // Xóa item cũ
         while (notifMenu.firstChild && notifMenu.firstChild !== notifEmpty) {
           notifMenu.removeChild(notifMenu.firstChild);
         }
@@ -74,8 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (notifEmpty) notifEmpty.style.display = 'none';
 
-        // Cập nhật badge (ưu tiên count, fallback sang items.length)
-        var count = typeof data.count === 'number' ? data.count : items.length;
+        var count = typeof data.count === 'number' ? data.count : 0;
         if (notifCount) {
           if (count > 0) {
             notifCount.textContent = count;
@@ -87,16 +79,60 @@ document.addEventListener('DOMContentLoaded', function () {
 
         items.forEach(function (item) {
           var a = document.createElement('a');
-          a.className = 'block px-3 py-2 text-xs hover:bg-slate-50';
-          a.textContent = item.noi_dung || '';
-          a.href = item.link ? item.link : '#';
+          a.className = 'notification-item block px-3 py-2 text-xs hover:bg-slate-50';
+          // chưa đọc -> in đậm
+          if (String(item.da_xem) === '0') {
+            a.classList.add('font-semibold');
+          }
+          a.dataset.id = item.ma_thong_bao;
+          a.href       = item.link ? item.link : '#';
+          a.innerHTML  = `
+            <div>${item.noi_dung || ''}</div>
+            <div class="text-[10px] text-slate-400">${item.thoi_gian_tao || ''}</div>
+          `;
           notifMenu.appendChild(a);
         });
       })
       .catch(function () {});
   }
 
-  // load lần đầu + auto refresh mỗi 10s
+  // Click 1 thông báo -> mark read + đi tới link
+  if (notifMenu) {
+    notifMenu.addEventListener('click', function (e) {
+      var a = e.target.closest('.notification-item');
+      if (!a) return;
+      e.preventDefault();
+
+      var id   = a.dataset.id;
+      var href = a.getAttribute('href') || '#';
+
+      fetch('index.php?c=Notification&a=markRead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'id=' + encodeURIComponent(id)
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        // update style
+        a.classList.remove('font-semibold');
+        if (notifCount && typeof data.unread === 'number') {
+          if (data.unread > 0) {
+            notifCount.textContent = data.unread;
+            notifCount.classList.remove('hidden');
+          } else {
+            notifCount.classList.add('hidden');
+          }
+        }
+      })
+      .catch(function () {})
+      .finally(function () {
+        if (href && href !== '#') {
+          window.location.href = href;
+        }
+      });
+    });
+  }
+
   loadNotifications();
   setInterval(loadNotifications, 10000);
 });

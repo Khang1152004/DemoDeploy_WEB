@@ -11,7 +11,25 @@ class Notification {
         $stmt->close();
     }
 
-    // Lấy danh sách THÔNG BÁO CHƯA ĐỌC (dropdown)
+    // Lấy DANH SÁCH GẦN NHẤT (cả đọc & chưa đọc) cho dropdown
+    public static function recent($userId, $limit = 10) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("
+            SELECT ma_thong_bao, noi_dung, link, da_xem, thoi_gian_tao
+            FROM thong_bao
+            WHERE ma_nguoi_nhan = ?
+            ORDER BY thoi_gian_tao DESC
+            LIMIT ?
+        ");
+        $stmt->bind_param("ii", $userId, $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $rows;
+    }
+
+    // Lấy thông báo CHƯA ĐỌC (nếu sau này cần)
     public static function unread($userId, $limit = 10) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("
@@ -45,7 +63,7 @@ class Notification {
         return (int)$row['c'];
     }
 
-    // Đánh dấu TẤT CẢ đã đọc cho 1 user
+    // Đánh dấu TẤT CẢ đã đọc
     public static function markAllRead($userId) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("UPDATE thong_bao SET da_xem = 1 WHERE ma_nguoi_nhan = ?");
@@ -54,7 +72,20 @@ class Notification {
         $stmt->close();
     }
 
-    // Gửi thông báo cho tất cả admin (đã được EmployerController dùng)
+    // Đánh dấu 1 THÔNG BÁO đã đọc
+    public static function markOneRead($id, $userId) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("
+            UPDATE thong_bao
+            SET da_xem = 1
+            WHERE ma_thong_bao = ? AND ma_nguoi_nhan = ?
+        ");
+        $stmt->bind_param("ii", $id, $userId);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // Gửi thông báo cho tất cả admin
     public static function notifyAdmins($message, $link = null) {
         $conn = Database::getConnection();
         $sql = "SELECT ma_nguoi_dung FROM nguoi_dung WHERE vai_tro = 'admin'";
