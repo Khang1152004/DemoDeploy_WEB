@@ -3,10 +3,10 @@ require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Auth.php';
 require_once __DIR__ . '/../models/Notification.php';
 
-class NotificationController extends Controller {
-
-    // API dữ liệu cho chuông
-    public function fetch() {
+class NotificationController extends Controller
+{
+    public function fetch()
+    {
         Auth::start();
         header('Content-Type: application/json; charset=utf-8');
 
@@ -16,12 +16,8 @@ class NotificationController extends Controller {
         }
 
         $userId = Auth::userId();
-
-        // Lấy lịch sử gần nhất (cả đọc + chưa đọc)
-        $rows  = Notification::recent($userId, 10);
-
-        // Badge = số chưa đọc
-        $count = Notification::countUnread($userId);
+        $rows   = Notification::recent($userId, 10);
+        $count  = Notification::countUnread($userId);
 
         echo json_encode([
             'items' => $rows,
@@ -29,8 +25,8 @@ class NotificationController extends Controller {
         ]);
     }
 
-    // Đọc 1 cái hoặc tất cả (tùy có gửi id hay không)
-    public function markRead() {
+    public function markRead()
+    {
         Auth::start();
         header('Content-Type: application/json; charset=utf-8');
 
@@ -56,8 +52,8 @@ class NotificationController extends Controller {
         ]);
     }
 
-    // (optional) trang lịch sử thông báo
-    public function index() {
+    public function index()
+    {
         Auth::start();
         if (!Auth::userId()) {
             $this->redirect('index.php?c=Auth&a=login');
@@ -65,12 +61,12 @@ class NotificationController extends Controller {
         }
 
         $userId = Auth::userId();
-        $items  = Notification::recent($userId, 50); // 50 cái mới nhất
+        $items  = Notification::recent($userId, 50);
         $this->render('notification/index', ['items' => $items]);
     }
 
-    // Giữ lại alias nếu chỗ khác gọi
-    public function markAllRead() {
+    public function markAllRead()
+    {
         $this->markRead();
     }
 }
