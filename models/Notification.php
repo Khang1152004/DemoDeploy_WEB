@@ -6,11 +6,11 @@ class Notification
     // Tạo thông báo mới
     public static function create($userId, $message, $link = null)
     {
-        $conn = Database::getConnection(); // PDO
+        $conn = Database::getConnection();
 
-        $sql = "INSERT INTO thong_bao (ma_nguoi_nhan, noi_dung, link, da_xem, thoi_gian_tao)
-                VALUES (:uid, :msg, :link, 0, NOW())";
-
+        // y chang file cũ nhưng dùng PDO
+        $sql = "INSERT INTO thong_bao (ma_nguoi_nhan, noi_dung, link)
+                VALUES (:uid, :msg, :link)";
         $stmt = $conn->prepare($sql);
         $stmt->execute([
             ':uid'  => (int)$userId,
@@ -19,7 +19,7 @@ class Notification
         ]);
     }
 
-    // Lấy DANH SÁCH GẦN NHẤT (cả đọc & chưa đọc) cho dropdown
+    // Lấy DANH SÁCH GẦN NHẤT (cả đọc & chưa đọc) cho chuông
     public static function recent($userId, $limit = 10)
     {
         $conn = Database::getConnection();
@@ -38,26 +38,7 @@ class Notification
         return $stmt->fetchAll(); // giống fetch_all(MYSQLI_ASSOC)
     }
 
-    // Lấy THÔNG BÁO CHƯA ĐỌC (nếu sau này cần)
-    public static function unread($userId, $limit = 10)
-    {
-        $conn = Database::getConnection();
-
-        $sql = "SELECT ma_thong_bao, noi_dung, link, da_xem, thoi_gian_tao
-                FROM thong_bao
-                WHERE ma_nguoi_nhan = :uid AND da_xem = 0
-                ORDER BY thoi_gian_tao DESC
-                LIMIT :lim";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':uid', (int)$userId, PDO::PARAM_INT);
-        $stmt->bindValue(':lim', (int)$limit, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
-    }
-
-    // Đếm số thông báo chưa đọc (hiện badge)
+    // Đếm số thông báo chưa đọc (badge)
     public static function countUnread($userId)
     {
         $conn = Database::getConnection();
@@ -73,7 +54,7 @@ class Notification
         return $row ? (int)$row['c'] : 0;
     }
 
-    // Đánh dấu TẤT CẢ đã đọc
+    // Đánh dấu tất cả đã đọc
     public static function markAllRead($userId)
     {
         $conn = Database::getConnection();
@@ -86,7 +67,7 @@ class Notification
         $stmt->execute([':uid' => (int)$userId]);
     }
 
-    // Đánh dấu 1 THÔNG BÁO đã đọc
+    // Đánh dấu 1 thông báo đã đọc
     public static function markOneRead($id, $userId)
     {
         $conn = Database::getConnection();
@@ -102,7 +83,7 @@ class Notification
         ]);
     }
 
-    // Gửi thông báo cho tất cả admin
+    // Gửi thông báo cho tất cả admin (y chang file cũ)
     public static function notifyAdmins($message, $link = null)
     {
         $conn = Database::getConnection();
@@ -110,8 +91,7 @@ class Notification
         $sql = "SELECT ma_nguoi_dung
                 FROM nguoi_dung
                 WHERE vai_tro = 'admin'";
-
-        $stmt = $conn->query($sql);
+        $stmt   = $conn->query($sql);
         $admins = $stmt->fetchAll();
 
         foreach ($admins as $admin) {
