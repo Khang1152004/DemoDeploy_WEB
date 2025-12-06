@@ -18,7 +18,8 @@ class Skill {
                 FROM ky_nang k
                 LEFT JOIN linh_vuc l ON k.ma_linh_vuc = l.ma_linh_vuc
                 ORDER BY k.ten_ky_nang";
-        $stmt = $conn->query($sql);
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 

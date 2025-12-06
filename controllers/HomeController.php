@@ -3,15 +3,17 @@ require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Auth.php';
 require_once __DIR__ . '/../models/Job.php';
 require_once __DIR__ . '/../models/Field.php';
+require_once __DIR__ . '/../models/Location.php';
 
 class HomeController extends Controller {
     public function index() {
         $fields = Field::all();
+        $locations = Location::all();
 
         $keyword = trim($_GET['q'] ?? '');
         $fieldId = isset($_GET['field']) ? (int)$_GET['field'] : 0;
         $salaryKeyword = trim($_GET['salary'] ?? '');
-        $locationId = 0; // có thể mở rộng thêm filter địa điểm sau này
+        $locationId = isset($_GET['location']) ? (int)$_GET['location'] : 0;
 
         if ($keyword !== '' || $fieldId > 0 || $salaryKeyword !== '' || $locationId > 0) {
             $jobs = Job::searchApproved($keyword, $fieldId, $locationId, $salaryKeyword);
@@ -20,10 +22,12 @@ class HomeController extends Controller {
         }
 
         $this->render('home/index', [
-            'jobs'          => $jobs,
-            'fields'        => $fields,
-            'keyword'       => $keyword,
-            'fieldId'       => $fieldId,
+            'jobs'       => $jobs,
+            'fields'     => $fields,
+            'locations'  => $locations,
+            'keyword'    => $keyword,
+            'fieldId'    => $fieldId,
+            'locationId' => $locationId,
         ]);
     }
 }

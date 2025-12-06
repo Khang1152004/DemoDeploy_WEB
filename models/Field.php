@@ -4,7 +4,8 @@ require_once __DIR__ . '/../core/Database.php';
 class Field {
     public static function all() {
         $conn = Database::getConnection();
-        $stmt = $conn->query("SELECT * FROM linh_vuc ORDER BY ten_linh_vuc");
+        $stmt = $conn->prepare("SELECT * FROM linh_vuc ORDER BY ten_linh_vuc");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 

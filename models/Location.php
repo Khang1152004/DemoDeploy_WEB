@@ -2,14 +2,15 @@
 require_once __DIR__ . '/../core/Database.php';
 
 class Location {
-    // Lấy tất cả địa điểm (danh_muc.loai_danh_muc = 'dia_diem')
+    // Lấy tất cả địa điểm (trong bảng danh_muc loại 'dia_diem')
     public static function all() {
         $conn = Database::getConnection();
         $sql = "SELECT ma_danh_muc AS ma_dia_diem, ten_danh_muc
                 FROM danh_muc
                 WHERE loai_danh_muc = 'dia_diem'
                 ORDER BY ten_danh_muc";
-        $stmt = $conn->query($sql);
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 

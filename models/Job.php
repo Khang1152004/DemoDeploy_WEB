@@ -2,12 +2,14 @@
 require_once __DIR__ . '/../core/Database.php';
 
 class Job {
-    // Tin đã duyệt mới nhất (trang chủ)
+    // Lấy tin tuyển dụng đã duyệt mới nhất (trang chủ)
     public static function latestApproved($limit = 10) {
         $conn = Database::getConnection();
-        $sql = "SELECT t.*, d.ten_cong_ty
+        $sql = "SELECT t.*, d.ten_cong_ty, lv.ten_linh_vuc, dd.ten_danh_muc
                 FROM tin_tuyen_dung t
                 LEFT JOIN doanh_nghiep d ON t.ma_doanh_nghiep = d.ma_doanh_nghiep
+                LEFT JOIN linh_vuc lv ON t.ma_linh_vuc = lv.ma_linh_vuc
+                LEFT JOIN danh_muc dd ON t.ma_dia_diem = dd.ma_danh_muc AND dd.loai_danh_muc = 'dia_diem'
                 WHERE t.trang_thai_tin_dang IN ('approved', 'delete_pending')
                   AND t.han_nop_ho_so >= CURDATE()
                 ORDER BY t.ma_tin_tuyen_dung DESC
@@ -48,21 +50,28 @@ class Job {
 
     public static function get($id) {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT * FROM tin_tuyen_dung WHERE ma_tin_tuyen_dung = ?");
+        $stmt = $conn->prepare("SELECT t.*, d.ten_cong_ty, lv.ten_linh_vuc, dd.ten_danh_muc
+                FROM tin_tuyen_dung t
+                LEFT JOIN doanh_nghiep d ON t.ma_doanh_nghiep = d.ma_doanh_nghiep
+                LEFT JOIN linh_vuc lv ON t.ma_linh_vuc = lv.ma_linh_vuc
+                LEFT JOIN danh_muc dd ON t.ma_dia_diem = dd.ma_danh_muc AND dd.loai_danh_muc = 'dia_diem'
+                WHERE t.ma_tin_tuyen_dung = ?");
         $stmt->execute([(int)$id]);
         return $stmt->fetch();
     }
 
-    // Alias cho ApplicationController (nếu có dùng)
+    // Alias cho get (nếu có dùng nơi khác)
     public static function getById($id) {
         return self::get($id);
     }
 
     public static function listByStatus($status) {
         $conn = Database::getConnection();
-        $sql = "SELECT t.*, d.ten_cong_ty
+        $sql = "SELECT t.*, d.ten_cong_ty, lv.ten_linh_vuc, dd.ten_danh_muc
                 FROM tin_tuyen_dung t
                 LEFT JOIN doanh_nghiep d ON t.ma_doanh_nghiep = d.ma_doanh_nghiep
+                LEFT JOIN linh_vuc lv ON t.ma_linh_vuc = lv.ma_linh_vuc
+                LEFT JOIN danh_muc dd ON t.ma_dia_diem = dd.ma_danh_muc AND dd.loai_danh_muc = 'dia_diem'
                 WHERE t.trang_thai_tin_dang = ?
                 ORDER BY t.ma_tin_tuyen_dung DESC";
         $stmt = $conn->prepare($sql);
@@ -80,7 +89,8 @@ class Job {
 
     public static function countAll() {
         $conn = Database::getConnection();
-        $stmt = $conn->query("SELECT COUNT(*) AS c FROM tin_tuyen_dung");
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM tin_tuyen_dung");
+        $stmt->execute();
         $row = $stmt->fetch();
         return (int)$row['c'];
     }
@@ -95,12 +105,14 @@ class Job {
         return (int)$row['c'];
     }
 
-    // Tìm kiếm tin đã duyệt
+    // Tìm kiếm tin đã duyệt (theo từ khóa, lĩnh vực, địa điểm, khoảng lương)
     public static function searchApproved($keyword = '', $fieldId = 0, $locationId = 0, $salaryKeyword = '') {
         $conn = Database::getConnection();
-        $sql = "SELECT t.*, d.ten_cong_ty
+        $sql = "SELECT t.*, d.ten_cong_ty, lv.ten_linh_vuc, dd.ten_danh_muc
                 FROM tin_tuyen_dung t
                 LEFT JOIN doanh_nghiep d ON t.ma_doanh_nghiep = d.ma_doanh_nghiep
+                LEFT JOIN linh_vuc lv ON t.ma_linh_vuc = lv.ma_linh_vuc
+                LEFT JOIN danh_muc dd ON t.ma_dia_diem = dd.ma_danh_muc AND dd.loai_danh_muc = 'dia_diem'
                 WHERE t.trang_thai_tin_dang IN ('approved', 'delete_pending')
                   AND t.han_nop_ho_so >= CURDATE()";
         $params = [];
@@ -129,7 +141,6 @@ class Job {
         }
 
         $sql .= " ORDER BY t.ma_tin_tuyen_dung DESC";
-
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
