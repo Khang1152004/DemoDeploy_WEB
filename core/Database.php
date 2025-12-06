@@ -4,10 +4,16 @@ class Database {
 
     public static function getConnection() {
         if (self::$conn === null) {
-            mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-            self::$conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-            self::$conn->set_charset("utf8mb4");
+            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+
+            self::$conn = new PDO($dsn, DB_USER, DB_PASS, [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
         }
+
+        // Từ giờ trở đi, mọi nơi gọi Database::getConnection()
+        // sẽ nhận được 1 đối tượng PDO
         return self::$conn;
     }
 }
