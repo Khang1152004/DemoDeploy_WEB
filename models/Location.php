@@ -7,7 +7,10 @@ class Location
     public static function all()
     {
         $conn = Database::getConnection();
-        $sql = "SELECT * FROM danh_muc
+        $sql = "SELECT 
+                    ma_danh_muc   AS ma_dia_diem,
+                    ten_danh_muc  AS ten_dia_diem
+                FROM danh_muc
                 WHERE loai_danh_muc = 'dia_diem'
                 ORDER BY ten_danh_muc";
         $stmt = $conn->query($sql);
@@ -18,7 +21,12 @@ class Location
     public static function find($id)
     {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT * FROM danh_muc WHERE ma_danh_muc = ? AND loai_danh_muc = 'dia_diem'");
+        $sql = "SELECT 
+                    ma_danh_muc   AS ma_dia_diem,
+                    ten_danh_muc  AS ten_dia_diem
+                FROM danh_muc
+                WHERE ma_danh_muc = ? AND loai_danh_muc = 'dia_diem'";
+        $stmt = $conn->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
@@ -27,12 +35,13 @@ class Location
     public static function create($name)
     {
         $conn = Database::getConnection();
-        $sql = "INSERT INTO danh_muc (ten_danh_muc, loai_danh_muc) VALUES (?, 'dia_diem')";
+        $sql = "INSERT INTO danh_muc (ten_danh_muc, loai_danh_muc)
+                VALUES (?, 'dia_diem')";
         $stmt = $conn->prepare($sql);
         return $stmt->execute([$name]);
     }
 
-    // Cập nhật
+    // Cập nhật địa điểm
     public static function update($id, $name)
     {
         $conn = Database::getConnection();
@@ -43,7 +52,7 @@ class Location
         return $stmt->execute([$name, $id]);
     }
 
-    // Xóa
+    // Xóa địa điểm
     public static function delete($id)
     {
         $conn = Database::getConnection();
