@@ -1,116 +1,90 @@
 <?php
 require_once __DIR__ . '/../core/Database.php';
 
-class CV
-{
-    // Lấy tất cả CV của 1 ứng viên
-    public static function byCandidate($candidateId)
-    {
+class CV {
+    public static function getByCandidate($userId) {
         $conn = Database::getConnection();
-        $sql = "SELECT cv.*, l.ten_linh_vuc
+        $sql = "SELECT cv.*, lv.ten_linh_vuc,
+                       GROUP_CONCAT(kn.ten_ky_nang SEPARATOR ', ') AS ky_nang
                 FROM ho_so_cv cv
-                LEFT JOIN linh_vuc l ON cv.ma_linh_vuc = l.ma_linh_vuc
+                JOIN linh_vuc lv ON cv.ma_linh_vuc = lv.ma_linh_vuc
+                LEFT JOIN cv_kynang ck ON ck.ma_cv = cv.ma_cv
+                LEFT JOIN ky_nang kn ON kn.ma_ky_nang = ck.ma_ky_nang
                 WHERE cv.ma_ung_vien = ?
+                GROUP BY cv.ma_cv
                 ORDER BY cv.ma_cv DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$candidateId]);
+        $stmt->execute([(int)$userId]);
         return $stmt->fetchAll();
     }
 
-    // Tìm 1 CV cụ thể
-    public static function find($cvId)
-    {
+    public static function create($userId, $fieldId, $skills, $filePath) {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT * FROM ho_so_cv WHERE ma_cv = ?");
-        $stmt->execute([$cvId]);
-        return $stmt->fetch();
-    }
-
-    // Tạo CV mới
-    public static function create($candidateId, $data)
-    {
-        $conn = Database::getConnection();
-        $sql = "INSERT INTO ho_so_cv
-                (ma_ung_vien, tieu_de, file_cv, mo_ta, ma_linh_vuc)
-                VALUES (?, ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        $ok = $stmt->execute([
-            $candidateId,
-            $data['tieu_de'],
-            $data['file_cv'],
-            $data['mo_ta'],
-            $data['ma_linh_vuc'],
-        ]);
-        if ($ok) {
-            return $conn->lastInsertId();
-        }
-        return false;
-    }
-
-    // Cập nhật CV
-    public static function update($cvId, $data)
-    {
-        $conn = Database::getConnection();
-        $sql = "UPDATE ho_so_cv
-                SET tieu_de = ?,
-                    file_cv = ?,
-                    mo_ta = ?,
-                    ma_linh_vuc = ?
-                WHERE ma_cv = ?";
-        $stmt = $conn->prepare($sql);
-        return $stmt->execute([
-            $data['tieu_de'],
-            $data['file_cv'],
-            $data['mo_ta'],
-            $data['ma_linh_vuc'],
-            $cvId,
-        ]);
-    }
-
-    // Xóa CV
-    public static function delete($cvId)
-    {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare("DELETE FROM ho_so_cv WHERE ma_cv = ?");
-        return $stmt->execute([$cvId]);
-    }
-
-    // Lưu kỹ năng của CV (cv_kynang) – xóa hết rồi thêm lại
-    public static function syncSkills($cvId, $skillIds)
-    {
-        $conn = Database::getConnection();
-        $conn->beginTransaction();
-        try {
-            // Xóa cũ
-            $stmt = $conn->prepare("DELETE FROM cv_kynang WHERE ma_cv = ?");
-            $stmt->execute([$cvId]);
-
-            // Thêm mới
-            if (!empty($skillIds)) {
-                $stmt = $conn->prepare("INSERT INTO cv_kynang (ma_cv, ma_ky_nang) VALUES (?, ?)");
-                foreach ($skillIds as $sid) {
-                    $stmt->execute([$cvId, $sid]);
-                }
-            }
-
-            $conn->commit();
-            return true;
-        } catch (Exception $e) {
-            $conn->rollBack();
+        $stmt = $conn->prepare(
+            "INSERT INTO ho_so_cv (ma_ung_vien, ma_linh_vuc, file_cv) VALUES (?,?,?)"
+        );
+        if (!$stmt->execute([(int)$userId, (int)$fieldId, $filePath])) {
             return false;
         }
+
+        $cvId = (int)$conn->lastInsertId();
+
+        if (!empty($skills)) {
+            $stmt2 = $conn->prepare("INSERT INTO cv_kynang (ma_cv, ma_ky_nang) VALUES (?,?)");
+            foreach ($skills as $sid) {
+                $sid = (int)$sid;
+                if ($sid <= 0) continue;
+                $stmt2->execute([$cvId, $sid]);
+            }
+        }
+        return true;
     }
 
-    // Lấy danh sách kỹ năng của 1 CV
-    public static function getSkills($cvId)
-    {
+    public static function delete($cvId, $userId) {
         $conn = Database::getConnection();
-        $sql = "SELECT k.*
-                FROM cv_kynang ck
-                JOIN ky_nang k ON ck.ma_ky_nang = k.ma_ky_nang
-                WHERE ck.ma_cv = ?";
+        $stmt = $conn->prepare("SELECT * FROM ho_so_cv WHERE ma_cv = ? AND ma_ung_vien = ?");
+        $stmt->execute([(int)$cvId, (int)$userId]);
+        $cv = $stmt->fetch();
+        if (!$cv) return;
+
+        $stmt2 = $conn->prepare("DELETE FROM cv_kynang WHERE ma_cv = ?");
+        $stmt2->execute([(int)$cvId]);
+
+        $stmt3 = $conn->prepare("DELETE FROM ho_so_cv WHERE ma_cv = ?");
+        $stmt3->execute([(int)$cvId]);
+
+        if (!empty($cv['file_cv'])) {
+            $full = __DIR__ . '/../' . $cv['file_cv'];
+            if (file_exists($full)) @unlink($full);
+        }
+    }
+
+    public static function search($fieldId = null, $skillId = null) {
+        $conn = Database::getConnection();
+        $sql = "SELECT cv.*, lv.ten_linh_vuc,
+                       GROUP_CONCAT(DISTINCT kn.ten_ky_nang SEPARATOR ', ') AS ky_nang,
+                       u.email, v.ho_ten, v.sdt
+                FROM ho_so_cv cv
+                JOIN linh_vuc lv ON cv.ma_linh_vuc = lv.ma_linh_vuc
+                LEFT JOIN cv_kynang ck ON ck.ma_cv = cv.ma_cv
+                LEFT JOIN ky_nang kn ON kn.ma_ky_nang = ck.ma_ky_nang
+                LEFT JOIN ung_vien v ON v.ma_ung_vien = cv.ma_ung_vien
+                LEFT JOIN nguoi_dung u ON u.ma_nguoi_dung = v.ma_ung_vien
+                WHERE 1=1";
+        $params = [];
+
+        if ($fieldId) {
+            $sql .= " AND cv.ma_linh_vuc = ?";
+            $params[] = (int)$fieldId;
+        }
+        if ($skillId) {
+            $sql .= " AND ck.ma_ky_nang = ?";
+            $params[] = (int)$skillId;
+        }
+
+        $sql .= " GROUP BY cv.ma_cv ORDER BY cv.ma_cv DESC";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$cvId]);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 }

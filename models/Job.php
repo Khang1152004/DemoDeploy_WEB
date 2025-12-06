@@ -2,10 +2,9 @@
 require_once __DIR__ . '/../core/Database.php';
 
 class Job {
-    // Lấy các tin đã duyệt mới nhất (trang chủ)
+    // Tin đã duyệt mới nhất (trang chủ)
     public static function latestApproved($limit = 10) {
         $conn = Database::getConnection();
-
         $sql = "SELECT t.*, d.ten_cong_ty
                 FROM tin_tuyen_dung t
                 LEFT JOIN doanh_nghiep d ON t.ma_doanh_nghiep = d.ma_doanh_nghiep
@@ -13,24 +12,18 @@ class Job {
                   AND t.han_nop_ho_so >= CURDATE()
                 ORDER BY t.ma_tin_tuyen_dung DESC
                 LIMIT :limit";
-
         $stmt = $conn->prepare($sql);
-        // PDO: bind int cho LIMIT
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->execute();
-
-        return $stmt->fetchAll(); // mảng các job
+        return $stmt->fetchAll();
     }
 
-    // Tạo tin tuyển dụng mới
     public static function create($employerId, $data) {
         $conn = Database::getConnection();
-
         $sql = "INSERT INTO tin_tuyen_dung
                 (ma_doanh_nghiep, tieu_de, mo_ta_cong_viec, yeu_cau_ung_vien,
                  muc_luong_khoang, ma_linh_vuc, ma_dia_diem, han_nop_ho_so, trang_thai_tin_dang)
                 VALUES (?,?,?,?,?,?,?,?, 'pending')";
-
         $stmt = $conn->prepare($sql);
         return $stmt->execute([
             $employerId,
@@ -44,92 +37,74 @@ class Job {
         ]);
     }
 
-    // Lấy tất cả tin của 1 doanh nghiệp
     public static function byEmployer($employerId) {
         $conn = Database::getConnection();
-
-        $sql = "SELECT * FROM tin_tuyen_dung
-                WHERE ma_doanh_nghiep = ?
-                ORDER BY ma_tin_tuyen_dung DESC";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$employerId]);
-
+        $stmt = $conn->prepare(
+            "SELECT * FROM tin_tuyen_dung WHERE ma_doanh_nghiep = ? ORDER BY ma_tin_tuyen_dung DESC"
+        );
+        $stmt->execute([(int)$employerId]);
         return $stmt->fetchAll();
     }
 
-    // Lấy chi tiết 1 tin theo id
     public static function get($id) {
         $conn = Database::getConnection();
-
         $stmt = $conn->prepare("SELECT * FROM tin_tuyen_dung WHERE ma_tin_tuyen_dung = ?");
-        $stmt->execute([$id]);
-
-        return $stmt->fetch(); // 1 dòng hoặc false
+        $stmt->execute([(int)$id]);
+        return $stmt->fetch();
     }
 
-    // Lấy danh sách tin theo trạng thái (cho admin)
+    // Alias cho ApplicationController (nếu có dùng)
+    public static function getById($id) {
+        return self::get($id);
+    }
+
     public static function listByStatus($status) {
         $conn = Database::getConnection();
-
         $sql = "SELECT t.*, d.ten_cong_ty
                 FROM tin_tuyen_dung t
                 LEFT JOIN doanh_nghiep d ON t.ma_doanh_nghiep = d.ma_doanh_nghiep
                 WHERE t.trang_thai_tin_dang = ?
                 ORDER BY t.ma_tin_tuyen_dung DESC";
-
         $stmt = $conn->prepare($sql);
         $stmt->execute([$status]);
-
         return $stmt->fetchAll();
     }
 
-    // Cập nhật trạng thái tin
-    public static function updateStatus($jobId, $status) {
+    public static function updateStatus($id, $status) {
         $conn = Database::getConnection();
-
-        $sql = "UPDATE tin_tuyen_dung
-                SET trang_thai_tin_dang = ?
-                WHERE ma_tin_tuyen_dung = ?";
-
-        $stmt = $conn->prepare($sql);
-        return $stmt->execute([$status, $jobId]);
+        $stmt = $conn->prepare(
+            "UPDATE tin_tuyen_dung SET trang_thai_tin_dang = ? WHERE ma_tin_tuyen_dung = ?"
+        );
+        return $stmt->execute([$status, (int)$id]);
     }
 
-    // Đếm tất cả tin
     public static function countAll() {
         $conn = Database::getConnection();
-
         $stmt = $conn->query("SELECT COUNT(*) AS c FROM tin_tuyen_dung");
         $row = $stmt->fetch();
-
         return (int)$row['c'];
     }
 
-    // Đếm tin theo trạng thái
     public static function countByStatus($status) {
         $conn = Database::getConnection();
-
-        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM tin_tuyen_dung WHERE trang_thai_tin_dang = ?");
+        $stmt = $conn->prepare(
+            "SELECT COUNT(*) AS c FROM tin_tuyen_dung WHERE trang_thai_tin_dang = ?"
+        );
         $stmt->execute([$status]);
         $row = $stmt->fetch();
-
         return (int)$row['c'];
     }
 
-    // Tìm kiếm tin đã duyệt (trang danh sách việc làm)
+    // Tìm kiếm tin đã duyệt
     public static function searchApproved($keyword = '', $fieldId = 0, $locationId = 0, $salaryKeyword = '') {
         $conn = Database::getConnection();
-
         $sql = "SELECT t.*, d.ten_cong_ty
                 FROM tin_tuyen_dung t
                 LEFT JOIN doanh_nghiep d ON t.ma_doanh_nghiep = d.ma_doanh_nghiep
                 WHERE t.trang_thai_tin_dang IN ('approved', 'delete_pending')
                   AND t.han_nop_ho_so >= CURDATE()";
-
         $params = [];
 
-        // Từ khóa tiêu đề / mô tả / yêu cầu
         if ($keyword !== '') {
             $sql .= " AND (t.tieu_de LIKE ? OR t.mo_ta_cong_viec LIKE ? OR t.yeu_cau_ung_vien LIKE ?)";
             $like = '%' . $keyword . '%';
@@ -138,30 +113,25 @@ class Job {
             $params[] = $like;
         }
 
-        // Từ khóa lương
         if ($salaryKeyword !== '') {
             $sql .= " AND t.muc_luong_khoang LIKE ?";
             $params[] = '%' . $salaryKeyword . '%';
         }
 
-        // Lọc theo lĩnh vực
         if ($fieldId > 0) {
             $sql .= " AND t.ma_linh_vuc = ?";
-            $params[] = $fieldId;
+            $params[] = (int)$fieldId;
         }
 
-        // Lọc theo địa điểm
         if ($locationId > 0) {
             $sql .= " AND t.ma_dia_diem = ?";
-            $params[] = $locationId;
+            $params[] = (int)$locationId;
         }
 
         $sql .= " ORDER BY t.ma_tin_tuyen_dung DESC";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute($params);
-
         return $stmt->fetchAll();
     }
-
 }
