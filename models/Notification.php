@@ -7,7 +7,8 @@ class Notification {
     public static function create($userId, $message, $link = null) {
         $conn = Database::getConnection();
 
-        $sql = "INSERT INTO thong_bao (ma_nguoi_nhan, noi_dung, link, is_read, created_at)
+        // DÙNG CỘT da_xem, thoi_gian_tao ĐÚNG VỚI DB HIỆN TẠI
+        $sql = "INSERT INTO thong_bao (ma_nguoi_nhan, noi_dung, link, da_xem, thoi_gian_tao)
                 VALUES (?, ?, ?, 0, NOW())";
 
         $stmt = $conn->prepare($sql);
@@ -30,10 +31,10 @@ class Notification {
     public static function recent($userId, $limit = 10) {
         $conn = Database::getConnection();
 
-        $sql = "SELECT ma_thong_bao, noi_dung, link, is_read, created_at
+        $sql = "SELECT ma_thong_bao, noi_dung, link, da_xem, thoi_gian_tao
                 FROM thong_bao
                 WHERE ma_nguoi_nhan = ?
-                ORDER BY created_at DESC
+                ORDER BY thoi_gian_tao DESC
                 LIMIT :limit";
 
         $stmt = $conn->prepare($sql);
@@ -43,39 +44,39 @@ class Notification {
         return $stmt->fetchAll();
     }
 
-    // Mark tất cả đã đọc
+    // Đánh dấu tất cả đã đọc
     public static function markAllRead($userId) {
         $conn = Database::getConnection();
 
-        $sql = "UPDATE thong_bao SET is_read = 1 WHERE ma_nguoi_nhan = ?";
+        $sql = "UPDATE thong_bao SET da_xem = 1 WHERE ma_nguoi_nhan = ?";
         $stmt = $conn->prepare($sql);
         $stmt->execute([(int)$userId]);
     }
 
-    // Mark 1 thông báo
+    // Đánh dấu 1 thông báo đã đọc
     public static function markOneRead($id, $userId) {
         $conn = Database::getConnection();
 
         $sql = "UPDATE thong_bao
-                SET is_read = 1
+                SET da_xem = 1
                 WHERE ma_thong_bao = ? AND ma_nguoi_nhan = ?";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute([(int)$id, (int)$userId]);
     }
 
-    // Đếm số chưa đọc
+    // Đếm số chưa đọc (hiện badge trên icon chuông)
     public static function countUnread($userId) {
         $conn = Database::getConnection();
 
         $sql = "SELECT COUNT(*) AS c
                 FROM thong_bao
-                WHERE ma_nguoi_nhan = ? AND is_read = 0";
+                WHERE ma_nguoi_nhan = ? AND da_xem = 0";
 
         $stmt = $conn->prepare($sql);
         $stmt->execute([(int)$userId]);
 
         $row = $stmt->fetch();
-        return (int)$row['c'];
+        return $row ? (int)$row['c'] : 0;
     }
 }
