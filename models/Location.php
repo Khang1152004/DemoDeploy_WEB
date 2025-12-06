@@ -8,14 +8,17 @@ class Location
     {
         $conn = Database::getConnection();
         $sql = "SELECT 
-                    ma_danh_muc   AS ma_dia_diem,
-                    ten_danh_muc  AS ten_dia_diem
-                FROM danh_muc
-                WHERE loai_danh_muc = 'dia_diem'
-                ORDER BY ten_danh_muc";
+                ma_danh_muc,
+                ma_danh_muc   AS ma_dia_diem,
+                ten_danh_muc,
+                ten_danh_muc  AS ten_dia_diem
+            FROM danh_muc
+            WHERE loai_danh_muc = 'dia_diem'
+            ORDER BY ten_danh_muc";
         $stmt = $conn->query($sql);
         return $stmt->fetchAll();
     }
+
 
     // Tìm 1 địa điểm
     public static function find($id)
