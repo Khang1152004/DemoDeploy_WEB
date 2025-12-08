@@ -12,18 +12,29 @@ class JobController extends Controller
 {
     public function detail()
     {
-        $id = (int)($_GET['id'] ?? 0);
+        $id  = (int)($_GET['id'] ?? 0);
         $job = Job::get($id);
-        $today = date('Y-m-d');
-        if (
-            !$job
-            || !in_array($job['trang_thai_tin_dang'], ['approved', 'delete_pending'])
-            || $job['han_nop_ho_so'] < $today
-        ) {
+
+        if (!$job) {
             $this->redirect(['c' => 'Home', 'a' => 'index']);
         }
+
+        $today = date('Y-m-d');
+        $role  = Auth::role(); // 'admin', 'ung_vien', 'doanh_nghiep', ...
+
+        // Chỉ chặn với user thường; admin được xem mọi tin
+        if ($role !== 'admin') {
+            if (
+                !in_array($job['trang_thai_tin_dang'], ['approved', 'delete_pending'])
+                || $job['han_nop_ho_so'] < $today
+            ) {
+                $this->redirect(['c' => 'Home', 'a' => 'index']);
+            }
+        }
+
         $this->render('job/detail', compact('job'));
     }
+
     public function index()
     {
         $fields    = Field::all();
