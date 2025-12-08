@@ -63,7 +63,7 @@
                 <td class="px-3 py-2"><?= htmlspecialchars($j['tieu_de']) ?></td>
                 <td class="px-3 py-2"><?= htmlspecialchars($j['ten_cong_ty'] ?? '') ?></td>
                 <td>
-                  <a href="index.php?c=Admin&a=detail&id=<?= (int)$job['ma_tin_tuyen_dung'] ?>"
+                  <a href="index.php?c=Admin&a=detail&id=<?= (int)$j['ma_tin_tuyen_dung'] ?>"
                     class="inline-flex items-center px-3 py-1 rounded-lg border border-slate-300 text-xs text-slate-700 hover:bg-slate-100">
                     Xem chi tiết
                   </a>
@@ -110,7 +110,7 @@
                 <td class="px-3 py-2"><?= htmlspecialchars($j['tieu_de']) ?></td>
                 <td class="px-3 py-2"><?= htmlspecialchars($j['ten_cong_ty'] ?? '') ?></td>
                 <td>
-                  <a href="index.php?c=Admin&a=detail&id=<?= (int)$job['ma_tin_tuyen_dung'] ?>"
+                  <a href="index.php?c=Admin&a=detail&id=<?= (int)$j['ma_tin_tuyen_dung'] ?>"
                     class="inline-flex items-center px-3 py-1 rounded-lg border border-slate-300 text-xs text-slate-700 hover:bg-slate-100">
                     Xem chi tiết
                   </a>
