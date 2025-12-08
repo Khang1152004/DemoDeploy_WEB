@@ -16,7 +16,7 @@
           <a href="index.php?c=Auth&a=register" class="inline-flex items-center px-4 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold shadow hover:bg-primary-700">
             Bắt đầu ngay
           </a>
-          <a href="#job-list" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm font-medium text-slate-800 hover:bg-white">
+          <a href="index.php?c=Job&a=index" class="inline-flex items-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white/70 text-sm font-medium text-slate-800 hover:bg-white">
             Xem tin tuyển dụng
           </a>
         </div>
