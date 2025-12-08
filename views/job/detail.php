@@ -1,3 +1,7 @@
+<a href="javascript:history.back()"
+   class="inline-flex items-center mb-4 px-3 py-1.5 rounded-lg border border-slate-300 text-sm text-slate-700 hover:bg-slate-100">
+    ← Quay lại
+</a>
 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
   <div class="flex items-start justify-between gap-4">
     <div>
@@ -24,7 +28,7 @@
       </div>
       <?php if (!empty($job['han_nop_ho_so'])): ?>
         <p class="text-[11px] text-slate-500">
-          Hạn nộp hồ sơ: <?= htmlspecialchars($job['han_nop_ho_so']) ?>
+           Hạn nộp hồ sơ: <?= formatDate($job['han_nop_ho_so']) ?>
         </p>
       <?php endif; ?>
     </div>
@@ -53,7 +57,7 @@
         <p><strong>Lĩnh vực:</strong> <?= htmlspecialchars($job['ten_linh_vuc'] ?? 'Chưa cập nhật') ?></p>
         <p><strong>Địa điểm:</strong> <?= htmlspecialchars($job['ten_dia_diem'] ?? 'Chưa cập nhật') ?></p>
         <?php if (!empty($job['han_nop_ho_so'])): ?>
-          <p><strong>Hạn nộp:</strong> <?= htmlspecialchars($job['han_nop_ho_so']) ?></p>
+          <p><strong>Hạn nộp:</strong> <?= formatDate($job['han_nop_ho_so']) ?></p>
         <?php endif; ?>
       </div>
 

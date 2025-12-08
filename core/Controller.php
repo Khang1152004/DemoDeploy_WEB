@@ -12,4 +12,12 @@ class Controller {
         header("Location: index.php?$query");
         exit;
     }
+    
+
+}
+function formatDate($dateString) {
+    if (empty($dateString)) return "";
+    $ts = strtotime($dateString);
+    if (!$ts) return $dateString;
+    return date("d-m-Y", $ts);
 }
