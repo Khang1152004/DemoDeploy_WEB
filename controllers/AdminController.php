@@ -8,6 +8,7 @@ require_once __DIR__ . '/../models/Skill.php';
 require_once __DIR__ . '/../models/Notification.php';
 require_once __DIR__ . '/../models/Location.php';
 require_once __DIR__ . '/../core/Mailer.php';
+require_once __DIR__ . '/../models/Job.php';
 
 
 class AdminController extends Controller
@@ -43,6 +44,28 @@ class AdminController extends Controller
             'totalJobs'         => $totalJobs,
             'approvedJobs'      => $approvedJobs,
             'pendingJobsCount'  => $pendingJobsCount,
+        ]);
+    }
+    public function detail()
+    {
+        // Chỉ cho admin
+        Auth::requireRole(['admin']);
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            // quay về dashboard admin nếu id không hợp lệ
+            $this->redirect(['c' => 'Admin', 'a' => 'dashboard']);
+        }
+
+        $job = Job::get($id);
+        if (!$job) {
+            $this->redirect(['c' => 'Admin', 'a' => 'dashboard']);
+        }
+
+        // Dùng lại view chi tiết chung
+        $this->render('job/detail', [
+            'job'       => $job,
+            'fromAdmin' => true,   // nếu sau này cần phân biệt
         ]);
     }
 

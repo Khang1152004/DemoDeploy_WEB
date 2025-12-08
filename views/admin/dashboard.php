@@ -63,11 +63,12 @@
                 <td class="px-3 py-2"><?= htmlspecialchars($j['tieu_de']) ?></td>
                 <td class="px-3 py-2"><?= htmlspecialchars($j['ten_cong_ty'] ?? '') ?></td>
                 <td>
-                  <a href="index.php?c=Job&a=detail&id=<?= (int)$job['ma_tin_tuyen_dung'] ?>&from=admin_pending"
+                  <a href="index.php?c=AdminJob&a=detail&id=<?= (int)$job['ma_tin_tuyen_dung'] ?>"
                     class="inline-flex items-center px-3 py-1 rounded-lg border border-slate-300 text-xs text-slate-700 hover:bg-slate-100">
                     Xem chi tiết
                   </a>
                 </td>
+
 
                 <td class="px-3 py-2 space-x-1">
                   <a class="inline-flex items-center px-2 py-1 rounded-md bg-emerald-500 text-white text-xs font-medium hover:bg-emerald-600"
@@ -108,11 +109,12 @@
                 <td class="px-3 py-2"><?= htmlspecialchars($j['tieu_de']) ?></td>
                 <td class="px-3 py-2"><?= htmlspecialchars($j['ten_cong_ty'] ?? '') ?></td>
                 <td>
-                  <a href="index.php?c=Job&a=detail&id=<?= (int)$item['ma_tin_tuyen_dung'] ?>"
+                  <a href="index.php?c=AdminJob&a=detail&id=<?= (int)$item['ma_tin_tuyen_dung'] ?>"
                     class="inline-flex items-center px-3 py-1 rounded-lg border border-slate-300 text-xs text-slate-700 hover:bg-slate-100">
                     Xem chi tiết
                   </a>
                 </td>
+
                 <td class="px-3 py-2 space-x-1">
                   <a class="inline-flex items-center px-2 py-1 rounded-md bg-red-500 text-white text-xs font-medium hover:bg-red-600"
                     href="index.php?c=Admin&a=handleDeleteRequest&id=<?= (int)$j['ma_tin_tuyen_dung'] ?>&action=approve">
