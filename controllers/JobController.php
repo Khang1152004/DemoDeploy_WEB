@@ -11,29 +11,31 @@ require_once __DIR__ . '/../models/Location.php';
 class JobController extends Controller
 {
     public function detail()
-    {
-        $id  = (int)($_GET['id'] ?? 0);
-        $job = Job::get($id);
+{
+    // Lấy id từ query string
+    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-        if (!$job) {
-            $this->redirect(['c' => 'Home', 'a' => 'index']);
-        }
-
-        $today = date('Y-m-d');
-        $role  = Auth::role(); // 'admin', 'ung_vien', 'doanh_nghiep', ...
-
-        // Chỉ chặn với user thường; admin được xem mọi tin
-        if ($role !== 'admin') {
-            if (
-                !in_array($job['trang_thai_tin_dang'], ['approved', 'delete_pending'])
-                || $job['han_nop_ho_so'] < $today
-            ) {
-                $this->redirect(['c' => 'Home', 'a' => 'index']);
-            }
-        }
-
-        $this->render('job/detail', compact('job'));
+    // Nếu không có id hợp lệ thì quay về trang chủ
+    if ($id <= 0) {
+        $this->redirect(['c' => 'Home', 'a' => 'index']);
     }
+
+    // Lấy thông tin tin tuyển dụng
+    $job = Job::get($id);
+
+    // Không tìm thấy tin → quay về trang chủ
+    if (!$job) {
+        $this->redirect(['c' => 'Home', 'a' => 'index']);
+    }
+
+    // Không lọc trạng thái, không check hạn nộp
+    // → bất kỳ tin nào có trong DB đều xem được (kể cả pending, rejected, delete_pending...)
+
+    $this->render('job/detail', [
+        'job' => $job,
+    ]);
+}
+
 
     public function index()
     {
