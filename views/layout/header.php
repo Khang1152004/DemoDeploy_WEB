@@ -4,7 +4,8 @@ Auth::start();
 <!doctype html>
 <html lang="vi">
 
-<head>
+<head >
+  <meta name="google-site-verification" content="DuF2epby_QcsFMivU3V2_9MrqMNg9cy9y4PjIEo7PpI" />
   <meta charset="utf-8">
   <title>Website tuyển dụng mini</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
