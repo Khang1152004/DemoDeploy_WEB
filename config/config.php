@@ -4,7 +4,7 @@ $isProduction = isset($_SERVER['HTTP_HOST']) &&
     in_array($_SERVER['HTTP_HOST'], [
         'khangstu2025.online',
         'www.khangstu2025.online',
-        'khangstu2025.infinityfreeapp.com', // nếu anh vẫn giữ domain cũ chạy song song
+        'khangstu2025.infinityfreeapp.com', //domain cũ chạy song song
     ]);
 
 // Tự xác định scheme http/https
@@ -23,10 +23,10 @@ define('BASE_URL', $isProduction
     : 'http://localhost:8080'
 );
 
-// SMTP giữ nguyên (sẽ nói thêm ở dưới)
+
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
 define('SMTP_USER', 'nguyenhuukhang999999999@gmail.com');
 define('SMTP_PASS', 'ybyb ksqn plcq fdnz');
-define('SMTP_FROM_EMAIL', 'jobmatch@gmail.com');
+define('SMTP_FROM_EMAIL', 'no-reply@khangstu2025.online');
 define('SMTP_FROM_NAME', 'Công ty săn đầu người ABC');
