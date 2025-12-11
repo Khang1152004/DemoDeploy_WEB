@@ -61,15 +61,62 @@ class AuthController extends Controller
                     // Tạo link xác nhận
                     $verifyLink = BASE_URL . "/index.php?c=Auth&a=verify&token=" . urlencode($token);
 
-                    $subject = 'Xác nhận đăng ký tài khoản';
+                    $subject = 'Xác nhận đăng ký tài khoản JobMatch';
 
-                    $body = "Chào bạn,\n\n"
-                        . "Bạn vừa đăng ký tài khoản trên hệ thống tuyển dụng của chúng tôi.\n\n"
-                        . "Vui lòng mở liên kết sau để xác nhận email và kích hoạt tài khoản:\n"
-                        . $verifyLink . "\n\n"
-                        . "Nếu bạn không thực hiện đăng ký, hãy bỏ qua email này.\n\n"
-                        . "Trân trọng,\n"
-                        . "Hệ thống tuyển dụng";
+                    // Nội dung HTML (body email)
+                    $body = "
+<div style='max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:24px;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Arial,sans-serif;'>
+    
+    <div style=\"display:flex;align-items:center;gap:8px;margin-bottom:20px;\">
+        <div style=\"width:32px;height:32px;border-radius:999px;background:#4F46E5;color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:600;\">J</div>
+        <div>
+            <div style=\"font-size:14px;color:#6b7280;\">Nền tảng tuyển dụng mini</div>
+            <div style=\"font-size:16px;font-weight:600;color:#111827;\">JobMatch</div>
+        </div>
+    </div>
+
+    <h2 style='margin:0 0 12px 0;font-size:20px;color:#111827;font-weight:700;'>
+        Xin chào bạn!
+    </h2>
+
+    <p style='margin:0 0 12px 0;font-size:14px;color:#4B5563;line-height:1.6;'>
+        Cảm ơn bạn đã đăng ký tài khoản tại <strong>JobMatch</strong>.
+        Vui lòng nhấn vào nút bên dưới để hoàn tất bước xác nhận email và kích hoạt tài khoản.
+    </p>
+
+    <div style='margin:20px 0;padding:16px 18px;border-radius:12px;background:#EEF2FF;border:1px solid #E0E7FF;'>
+        <p style='margin:0 0 10px 0;font-size:14px;color:#4B5563;'>
+            Bước cuối cùng để bắt đầu kết nối ứng viên & doanh nghiệp nhanh chóng:
+        </p>
+        <div style='text-align:center;margin-top:8px;'>
+            <a href='{$verifyLink}'
+               style='display:inline-block;background:#4F46E5;color:#ffffff;padding:12px 30px;border-radius:999px;
+                      font-size:15px;font-weight:600;text-decoration:none;'>
+                XÁC NHẬN TÀI KHOẢN
+            </a>
+        </div>
+    </div>
+
+    <p style='margin:0 0 8px 0;font-size:13px;color:#6B7280;line-height:1.6;'>
+        Nếu nút trên không hoạt động, hãy copy đường link sau và dán vào trình duyệt:
+    </p>
+
+    <p style='margin:0 0 16px 0;font-size:13px;color:#4F46E5;word-break:break-all;'>
+        <a href='{$verifyLink}' style='color:#4F46E5;text-decoration:none;'>{$verifyLink}</a>
+    </p>
+
+    <hr style='border:0;border-top:1px solid #E5E7EB;margin:18px 0;'>
+
+    <p style='margin:0;font-size:12px;color:#9CA3AF;line-height:1.6;text-align:center;'>
+        Đây là email tự động, vui lòng không trả lời lại email này.<br>
+        © " . date('Y') . " JobMatch. All rights reserved.
+    </p>
+</div>
+";
+
+                    // Gửi email – vẫn dùng hàm cũ
+                    Mailer::sendToMany([$email], $subject, $body);
+
 
                     Mailer::sendToMany([$email], $subject, $body);
 
