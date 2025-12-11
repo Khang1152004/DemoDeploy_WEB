@@ -2,8 +2,8 @@ name: Deploy to InfinityFree
 
 on:
   push:
-    branches: ["main"]   # mỗi lần push main là tự deploy
-  workflow_dispatch:      # cho phép bấm chạy tay trong Actions
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   ftp-deploy:
@@ -13,7 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # tránh lỗi git 128 khi action cần lịch sử commit
           fetch-depth: 0
 
       - name: Deploy via FTP
@@ -23,20 +22,15 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
 
-          # InfinityFree dùng FTPS (Explicit TLS) trên port 21
           protocol: ftps
           port: 21
 
-          # CHỈ deploy thư mục public
-          local-dir: ./public
+          # CHỈ deploy thư mục public (PHẢI có dấu /)
+          local-dir: ./public/
 
-          # NHỚ: FTP_PATH nên có dấu / ở cuối, ví dụ: "/htdocs/"
           server-dir: ${{ secrets.FTP_PATH }}
 
-          # tăng thời gian chờ để tránh Timeout (data socket)
-          timeout: 600000        # 600.000 ms = 10 phút
-
-          # log chi tiết để dễ debug nếu còn lỗi
+          timeout: 600000
           log-level: verbose
 
           exclude: |
