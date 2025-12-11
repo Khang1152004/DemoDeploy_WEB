@@ -27,6 +27,9 @@ jobs:
           protocol: ftps
           port: 21
 
+          # CHỈ deploy thư mục public
+          local-dir: ./public
+
           # NHỚ: FTP_PATH nên có dấu / ở cuối, ví dụ: "/htdocs/"
           server-dir: ${{ secrets.FTP_PATH }}
 
