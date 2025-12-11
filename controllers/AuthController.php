@@ -62,17 +62,22 @@ class AuthController extends Controller
                     $verifyLink = BASE_URL . "/index.php?c=Auth&a=verify&token=" . urlencode($token);
 
                     $subject = 'Xác nhận đăng ký tài khoản JobMatch';
+                    $logoUrl = BASE_URL . "public/assets/images/LogoJobMatch.png";
+
+
 
                     // Nội dung HTML (body email)
                     $body = "
 <div style='max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;padding:24px;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Arial,sans-serif;'>
     
-    <div style=\"display:flex;align-items:center;gap:8px;margin-bottom:20px;\">
-        <div style=\"width:32px;height:32px;border-radius:999px;background:#4F46E5;color:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:600;\">J</div>
-        <div>
-            <div style=\"font-size:14px;color:#6b7280;\">Nền tảng tuyển dụng mini</div>
-            <div style=\"font-size:16px;font-weight:600;color:#111827;\">JobMatch</div>
-        </div>
+    <div style='max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;
+            border:1px solid #e5e7eb;padding:24px;font-family:-apple-system,BlinkMacSystemFont,
+            \"Segoe UI\",Arial,sans-serif;'>
+
+    <div style='text-align:center;margin-bottom:20px;'>
+        <img src='{$logoUrl}' alt='JobMatch Logo' 
+             style='height:50px;object-fit:contain;margin-bottom:8px;'>
+        <div style='font-size:14px;color:#6b7280;'>Nền tảng tuyển dụng mini</div>
     </div>
 
     <h2 style='margin:0 0 12px 0;font-size:20px;color:#111827;font-weight:700;'>
