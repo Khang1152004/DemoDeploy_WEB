@@ -62,7 +62,7 @@ class AuthController extends Controller
                     $verifyLink = BASE_URL . "/index.php?c=Auth&a=verify&token=" . urlencode($token);
 
                     $subject = 'Xác nhận đăng ký tài khoản JobMatch';
-                    $logoUrl = BASE_URL . "public/assets/images/LogoJobMatch.png";
+                    $logoUrl = BASE_URL . "/public/assets/images/LogoJobMatch.png";
 
 
 
