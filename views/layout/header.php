@@ -4,7 +4,7 @@ Auth::start();
 <!doctype html>
 <html lang="vi">
 
-<head >
+<head>
   <meta name="google-site-verification" content="DuF2epby_QcsFMivU3V2_9MrqMNg9cy9y4PjIEo7PpI" />
   <meta charset="utf-8">
   <title>Website tuyển dụng mini</title>
@@ -45,15 +45,17 @@ Auth::start();
       <div class="flex h-16 items-center justify-between">
         <!-- Left: Logo + brand -->
         <div class="flex items-center space-x-3">
-          <a href="index.php" class="flex items-center space-x-2">
-            <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-primary-500 to-primary-400 text-white font-bold shadow-md">
-              J
-            </span>
+          <a href="<?= BASE_URL ?>" class="flex items-center gap-2">
+            <img src="<?= APP_LOGO_URL ?>"
+              alt="JobMatch Logo"
+              class="h-8 w-auto object-contain">
+
             <div class="flex flex-col leading-tight">
               <span class="font-semibold text-sm sm:text-base text-slate-900">JobMatch</span>
               <span class="text-[11px] text-slate-500 hidden sm:block">Nền tảng tuyển dụng mini</span>
             </div>
           </a>
+
         </div>
 
         <!-- Center: main nav -->

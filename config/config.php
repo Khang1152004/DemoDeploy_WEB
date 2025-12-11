@@ -22,6 +22,10 @@ define('BASE_URL', $isProduction
     ? $scheme . '://' . $_SERVER['HTTP_HOST']
     : 'http://localhost:8080'
 );
+//logo
+define('APP_LOGO_URL', BASE_URL . '/public/assets/images/LogoJobMatch.png');
+define('APP_NAME', 'JobMatch');
+define('APP_TAGLINE', 'Nền tảng tuyển dụng mini');
 
 
 define('SMTP_HOST', 'smtp.gmail.com');
