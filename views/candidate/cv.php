@@ -7,7 +7,7 @@
   <div class="alert alert-danger">
     <ul class="mb-0">
       <?php foreach ($errors as $e): ?>
-        <li><?= htmlspecialchars($e) ?></li>
+        <li><?= htmlspecialchars($e ?? '') ?></li>
       <?php endforeach; ?>
     </ul>
   </div>
@@ -34,11 +34,11 @@
             <?php foreach ($cvs as $i => $cv): ?>
               <tr>
                 <td class="text-center"><?= $i + 1 ?></td>
-                <td><?= htmlspecialchars($cv['ten_linh_vuc']) ?></td>
-                <td><?= htmlspecialchars($cv['ky_nang']) ?></td>
+                <td><?= htmlspecialchars($cv['ten_linh_vuc'] ?? '') ?></td>
+                <td><?= htmlspecialchars($cv['ky_nang'] ?? '') ?></td>
                 <td>
                   <?php if (!empty($cv['file_cv'])): ?>
-                    <a href="<?= htmlspecialchars($cv['file_cv']) ?>" target="_blank">Xem CV</a>
+                    <a href="<?= htmlspecialchars($cv['file_cv'] ?? '') ?>" target="_blank">Xem CV</a>
                   <?php endif; ?>
                 </td>
                 <td class="text-center">
@@ -66,7 +66,7 @@
           <?php foreach ($fields as $f): ?>
             <option value="<?= (int)$f['ma_linh_vuc'] ?>"
               <?= (isset($selectedFieldId) && (int)$selectedFieldId === (int)$f['ma_linh_vuc']) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($f['ten_linh_vuc']) ?>
+              <?= htmlspecialchars($f['ten_linh_vuc'] ?? '') ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -87,7 +87,7 @@
                        value="<?= (int)$skill['ma_ky_nang'] ?>"
                        id="skill<?= (int)$skill['ma_ky_nang'] ?>">
                 <label class="form-check-label" for="skill<?= (int)$skill['ma_ky_nang'] ?>">
-                  <?= htmlspecialchars($skill['ten_ky_nang']) ?>
+                  <?= htmlspecialchars($skill['ten_ky_nang'] ?? '') ?>
                 </label>
               </div>
             <?php endforeach; ?>
