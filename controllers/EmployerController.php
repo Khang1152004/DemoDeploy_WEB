@@ -42,44 +42,73 @@ class EmployerController extends Controller {
     }
 
     public function jobs() {
-        Auth::requireRole(['doanh_nghiep']);
-        $userId = Auth::userId();
-        $fields = Field::all();
-        $locations = Location::all();
-        $jobs = Job::byEmployer($userId);
-        $error = null;
+    Auth::requireRole(['doanh_nghiep']);
+    $userId    = Auth::userId();
+    $fields    = Field::all();
+    $locations = Location::all();
+    $jobs      = Job::byEmployer($userId);
+    $error     = null;
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = [
-                'tieu_de' => $_POST['tieu_de'] ?? '',
-                'mo_ta_cong_viec' => $_POST['mo_ta_cong_viec'] ?? '',
-                'yeu_cau_ung_vien' => $_POST['yeu_cau_ung_vien'] ?? '',
-                'muc_luong_khoang' => $_POST['muc_luong_khoang'] ?? '',
-                'ma_linh_vuc' => (int)($_POST['ma_linh_vuc'] ?? 0),
-                'ma_dia_diem' => isset($_POST['ma_dia_diem']) ? (int)$_POST['ma_dia_diem'] : null,
-                'han_nop_ho_so' => $_POST['han_nop_ho_so'] ?? null,
-            ];
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Lấy dữ liệu và chuẩn hóa
+        $tieu_de          = trim($_POST['tieu_de'] ?? '');
+        $mo_ta_cong_viec  = trim($_POST['mo_ta_cong_viec'] ?? '');
+        $yeu_cau_ung_vien = trim($_POST['yeu_cau_ung_vien'] ?? '');
+        $muc_luong_khoang = trim($_POST['muc_luong_khoang'] ?? '');
+        $ma_linh_vuc      = (int)($_POST['ma_linh_vuc'] ?? 0);
 
-            // Validate hạn nộp hồ sơ không được trước ngày hiện tại
-            if (empty($data['han_nop_ho_so'])) {
-                $error = 'Vui lòng chọn hạn nộp hồ sơ.';
-            } else {
-                $today = date('Y-m-d');
-                if ($data['han_nop_ho_so'] < $today) {
-                    $error = 'Hạn nộp hồ sơ không được trước ngày hiện tại.';
-                }
-            }
+        $ma_dia_diem_raw  = $_POST['ma_dia_diem'] ?? '';
+        $ma_dia_diem      = ($ma_dia_diem_raw === '' ? 0 : (int)$ma_dia_diem_raw);
 
-            if ($error === null) {
-                Job::create($userId, $data);
-                Notification::notifyAdmins("Tin tuyển dụng mới cần duyệt", "index.php?c=Admin&a=jobs&status=pending");
-                $this->redirect(['c'=>'Employer','a'=>'jobs']);
-                return;
+        $han_nop_ho_so    = $_POST['han_nop_ho_so'] ?? '';
+
+        // Validate lần lượt, hiển thị 1 lỗi rõ ràng
+        if ($tieu_de === '') {
+            $error = 'Vui lòng nhập tiêu đề tin tuyển dụng.';
+        } elseif ($mo_ta_cong_viec === '') {
+            $error = 'Vui lòng nhập mô tả công việc.';
+        } elseif ($yeu_cau_ung_vien === '') {
+            $error = 'Vui lòng nhập yêu cầu ứng viên.';
+        } elseif ($ma_linh_vuc <= 0) {
+            $error = 'Vui lòng chọn lĩnh vực.';
+        } elseif ($ma_dia_diem <= 0) {
+            $error = 'Vui lòng chọn địa điểm làm việc.';
+        } elseif ($han_nop_ho_so === '') {
+            $error = 'Vui lòng chọn hạn nộp hồ sơ.';
+        } else {
+            $today = date('Y-m-d');
+            if ($han_nop_ho_so < $today) {
+                $error = 'Hạn nộp hồ sơ không được trước ngày hiện tại.';
             }
         }
 
-        $this->render('employer/jobs', compact('jobs','fields','locations','error'));
+        if ($error === null) {
+            $data = [
+                'tieu_de'          => $tieu_de,
+                'mo_ta_cong_viec'  => $mo_ta_cong_viec,
+                'yeu_cau_ung_vien' => $yeu_cau_ung_vien,
+                'muc_luong_khoang' => $muc_luong_khoang,
+                'ma_linh_vuc'      => $ma_linh_vuc,
+                'ma_dia_diem'      => $ma_dia_diem,
+                'han_nop_ho_so'    => $han_nop_ho_so,
+            ];
+
+            if (Job::create($userId, $data)) {
+                Notification::notifyAdmins(
+                    "Tin tuyển dụng mới cần duyệt",
+                    "index.php?c=Admin&a=jobs&status=pending"
+                );
+                $this->redirect(['c' => 'Employer', 'a' => 'jobs']);
+                return;
+            } else {
+                $error = 'Có lỗi khi lưu tin tuyển dụng. Vui lòng thử lại.';
+            }
+        }
     }
+
+    $this->render('employer/jobs', compact('jobs', 'fields', 'locations', 'error'));
+}
+
 
 // doanh nghiệp gửi yêu cầu xóa
     public function requestDeleteJob() {

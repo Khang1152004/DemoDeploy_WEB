@@ -33,21 +33,27 @@ class Job
     {
         $conn = Database::getConnection();
         $sql = "INSERT INTO tin_tuyen_dung
-                (ma_doanh_nghiep, tieu_de, mo_ta_cong_viec, yeu_cau_ung_vien,
-                 muc_luong_khoang, ma_linh_vuc, ma_dia_diem, han_nop_ho_so, trang_thai_tin_dang)
-                VALUES (?,?,?,?,?,?,?,?, 'pending')";
-        $stmt = $conn->prepare($sql);
-        return $stmt->execute([
-            $employerId,
-            $data['tieu_de'],
-            $data['mo_ta_cong_viec'],
-            $data['yeu_cau_ung_vien'],
-            $data['muc_luong_khoang'],
-            $data['ma_linh_vuc'],
-            $data['ma_dia_diem'],
-            $data['han_nop_ho_so'],
-        ]);
+            (ma_doanh_nghiep, tieu_de, mo_ta_cong_viec, yeu_cau_ung_vien,
+             muc_luong_khoang, ma_linh_vuc, ma_dia_diem, han_nop_ho_so, trang_thai_tin_dang)
+            VALUES (?,?,?,?,?,?,?,?, 'pending')";
+        try {
+            $stmt = $conn->prepare($sql);
+            return $stmt->execute([
+                (int)$employerId,
+                $data['tieu_de'],
+                $data['mo_ta_cong_viec'],
+                $data['yeu_cau_ung_vien'],
+                $data['muc_luong_khoang'],
+                $data['ma_linh_vuc'],
+                $data['ma_dia_diem'],
+                $data['han_nop_ho_so'],
+            ]);
+        } catch (PDOException $e) {
+            error_log('Job::create error: ' . $e->getMessage());
+            return false;
+        }
     }
+
 
     public static function byEmployer($employerId)
     {

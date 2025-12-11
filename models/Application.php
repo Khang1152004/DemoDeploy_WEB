@@ -7,25 +7,31 @@ class Application
     {
         $conn = Database::getConnection();
         $sql = "INSERT INTO don_ung_tuyen
-            (ma_tin_tuyen_dung, ma_ung_vien, ngay_nop, trang_thai,
-             ho_ten_lien_he, email_lien_he, sdt_lien_he, cv_file)
-            VALUES (?, ?, CURDATE(), 'submitted', ?, ?, ?, ?)";
-        $stmt = $conn->prepare($sql);
+        (ma_tin_tuyen_dung, ma_ung_vien, ngay_nop, trang_thai,
+         ho_ten_lien_he, email_lien_he, sdt_lien_he, cv_file)
+        VALUES (?, ?, CURDATE(), 'submitted', ?, ?, ?, ?)";
+        try {
+            $stmt = $conn->prepare($sql);
 
-        // Nếu không có ứng viên đăng nhập -> để NULL thật sự
-        $candidateParam = ($candidateId === null || $candidateId === '')
-            ? null
-            : (int)$candidateId;
+            // Nếu không có ứng viên đăng nhập -> để NULL thật sự
+            $candidateParam = ($candidateId === null || $candidateId === '')
+                ? null
+                : (int)$candidateId;
 
-        return $stmt->execute([
-            (int)$jobId,
-            $candidateParam,          // KHÔNG cast NULL thành 0
-            $data['ho_ten'],
-            $data['email'],
-            $data['sdt'],
-            $data['cv_file'],
-        ]);
+            return $stmt->execute([
+                (int)$jobId,
+                $candidateParam,          // KHÔNG cast NULL thành 0
+                $data['ho_ten'],
+                $data['email'],
+                $data['sdt'],
+                $data['cv_file'],
+            ]);
+        } catch (PDOException $e) {
+            error_log('Application::create error: ' . $e->getMessage());
+            return false;
+        }
     }
+
 
 
     public static function byJob($jobId)
