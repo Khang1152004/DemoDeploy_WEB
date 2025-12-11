@@ -1,0 +1,71 @@
+
+
+4.4 Sửa cột trangthai của bảng hoadon để có giá trị mặc định là 0.
+ALTER TABLE hoadon MODIFY trangthai tinyint(4) NOT NULL DEFAULT 0;
+
+4.5 Tạo view cho biết 10 sách có giá cao nhất
+CREATE VIEW top_10 AS
+SELECT masach, tensach, gia
+FROM sach
+ORDER BY gia DESC
+LIMIT 10;
+--
+SELECT * FROM top_10;
+
+4.6 Tạo procedure để liệt masach, tensach của 1 loại khi biết mã loại
+DELIMITER $$
+CREATE PROCEDURE lietke(IN category_code VARCHAR(5))
+BEGIN
+    SELECT masach, tensach
+    FROM sach
+    WHERE maloai = category_code;
+END $$
+DELIMITER ;
+--
+CALL lietke('M01');
+
+5.1 Viết câu truy vấn tất cả các quyển sách được nhóm theo từng loại gồm các
+thông tin sau: masach, tensach, maloai, tenloai.
+SELECT s.masach, s.tensach, s.maloai, l.tenloai
+FROM sach s
+JOIN loai l ON s.maloai = l.maloai
+ORDER BY l.tenloai, s.masach;
+
+5.2 Tạo procedure dùng để cập nhật giá 1 quyển sách
+DELIMITER $$
+
+CREATE PROCEDURE capnhat(IN book_id VARCHAR(15), IN new_price FLOAT)
+BEGIN
+    UPDATE sach
+    SET gia = new_price
+    WHERE masach = book_id;
+END $$
+DELIMITER ;
+--
+CALL capnhat('S12345', 350.0);
+
+5.3 Viết câu truy vấn cho biết sách nào bán chạy nhất
+SELECT s.masach, s.tensach, SUM(ct.soluong) AS tongsoluong
+FROM chitiethd ct
+JOIN sach s ON ct.masach = s.masach
+GROUP BY s.masach, s.tensach
+ORDER BY tongsoluong DESC
+LIMIT 1;
+
+5.4 Tạo view cho biết 10 quyển sách bán chạy nhất
+CREATE VIEW top_10_ ban_chay AS
+SELECT s.masach, s.tensach, SUM(ct.soluong) AS tongsoluong
+FROM chitiethd ct
+JOIN sach s ON ct.masach = s.masach
+GROUP BY s.masach, s.tensach
+ORDER BY tongsoluong DESC
+LIMIT 10;
+
+5.5 Sao lưu CSDL bookstore
+mysqldump -u username -p bookstore > bookstore_backup.sql
+
+5.6 Xóa CSDL bookstore.
+drop database bookstore
+
+5.7 Phục hồi CSDL bookstore
+mysql -u username -p bookstore < bookstore_backup.sql

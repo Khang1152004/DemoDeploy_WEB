@@ -67,6 +67,8 @@ Auth::start();
             class="text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-100 <?php echo (($_GET['c'] ?? '') === 'Job') ? 'text-primary-600' : 'text-slate-600'; ?>">
             Tất cả tin tuyển dụng
           </a>
+          <a class="nav-link" href="/public/TH/lab.html">Lab thực hành</a>
+
 
           <?php if (Auth::role() === 'ung_vien'): ?>
             <a href="index.php?c=Candidate&a=cv" class="text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-600">
