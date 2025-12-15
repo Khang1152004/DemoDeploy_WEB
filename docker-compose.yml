@@ -7,6 +7,8 @@ services:
       - "8080:80"
     depends_on:
       - db
+    volumes:
+      - .:/var/www/html
     environment:
       APP_ENV: local
       BASE_URL: http://localhost:8080

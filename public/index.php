@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../core/Autoload.php';
 require_once __DIR__ . '/../config/config.php';
 
+
 session_start();
 
 $c = $_GET['c'] ?? 'home';
