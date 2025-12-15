@@ -17,6 +17,7 @@ define('DB_USER', 'if0_40245408');
 define('DB_PASS', 'GN6oIGrnv');
 define('DB_NAME', 'if0_40245408_quanlytuyendungabc');
 
+
 // BASE_URL cho web
 define('BASE_URL', $isProduction
     ? $scheme . '://' . $_SERVER['HTTP_HOST']

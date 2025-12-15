@@ -8,16 +8,26 @@ services:
     depends_on:
       - db
     environment:
+      APP_ENV: local
+      BASE_URL: http://localhost:8080
+
       DB_HOST: db
       DB_NAME: quanlytuyendungabc
       DB_USER: root
-      DB_PASS: example
+      DB_PASS: ""   # password rỗng (nhưng vẫn khai báo rõ)
+
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "587"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+      SMTP_FROM_EMAIL: ""
+      SMTP_FROM_NAME: "JobMatch Local"
 
   db:
-    image: mysql:8.0
+    image: mysql:8
     environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"   # cho phép root pass rỗng
       MYSQL_DATABASE: quanlytuyendungabc
-      MYSQL_ROOT_PASSWORD: example
     ports:
       - "3307:3306"
     volumes:
