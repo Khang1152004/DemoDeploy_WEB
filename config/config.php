@@ -1,6 +1,6 @@
 <?php
 // ====== CHỈ ĐỔI 1 CHỮ Ở ĐÂY ======
-$ENV = 'prod'; // 'local' hoặc 'prod'
+$ENV = 'local'; // 'local' hoặc 'prod'
 // =================================
 
 // Prod domains (để BASE_URL đúng khi deploy)
