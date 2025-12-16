@@ -51,6 +51,6 @@ define('APP_TAGLINE', 'Nền tảng tuyển dụng mini');
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
 define('SMTP_USER', 'nguyenhuukhang999999999@gmail.com');
-define('SMTP_PASS', '...'); // nên chuyển ra env, không để trong code
+define('SMTP_PASS', 'thmh uuai crio rqez'); // nên chuyển ra env, không để trong code
 define('SMTP_FROM_EMAIL', 'no-reply@khangstu2025.online');
 define('SMTP_FROM_NAME', 'Công ty săn đầu người ABC');
