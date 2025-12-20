@@ -74,11 +74,11 @@ Auth::start();
             <a href="index.php?c=Candidate&a=cv" class="text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-600">
               Quản lý CV
             </a>
-            <li class="nav-item">
-              <a class="nav-link" href="index.php?c=Candidate&a=dashboard">
-                Dashboard
-              </a>
-            </li>
+
+            <a class="nav-link" href="index.php?c=Candidate&a=dashboard">
+              Dashboard
+            </a>
+
           <?php elseif (Auth::role() === 'doanh_nghiep'): ?>
             <a href="index.php?c=Employer&a=jobs" class="text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-600">
               Tin tuyển dụng của tôi
