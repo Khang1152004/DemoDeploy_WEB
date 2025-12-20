@@ -60,6 +60,7 @@ class CandidateController extends Controller {
             $fieldId = (int)($_POST['ma_linh_vuc'] ?? 0);
             $selectedFieldId = $fieldId;
             $skillIds = $_POST['skills'] ?? [];
+            $cvName = trim($_POST['ten_cv'] ?? '');
 
             if ($fieldId <= 0) $errors[] = 'Vui lòng chọn lĩnh vực';
             if (empty($_FILES['cv_file']['name'])) $errors[] = 'Vui lòng chọn file CV';
@@ -84,7 +85,13 @@ class CandidateController extends Controller {
             }
 
             if (!$errors && $cvPath) {
-                if (CV::create($userId, $fieldId, $skillIds, $cvPath)) {
+                // Nếu người dùng không nhập tên, tự gợi ý từ tên file gốc
+                if ($cvName === '' && !empty($_FILES['cv_file']['name'])) {
+                    $base = pathinfo($_FILES['cv_file']['name'], PATHINFO_FILENAME);
+                    $cvName = trim((string)$base);
+                }
+
+                if (CV::create($userId, $fieldId, $skillIds, $cvPath, $cvName)) {
                     $this->redirect(['c'=>'Candidate','a'=>'cv']);
                 } else {
                     $errors[] = 'Lỗi lưu CSDL';

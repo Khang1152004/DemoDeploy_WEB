@@ -24,6 +24,7 @@
           <thead class="table-light">
             <tr>
               <th class="text-center" style="width:60px;">#</th>
+              <th>Tên CV</th>
               <th>Lĩnh vực</th>
               <th>Kỹ năng</th>
               <th>File</th>
@@ -34,6 +35,7 @@
             <?php foreach ($cvs as $i => $cv): ?>
               <tr>
                 <td class="text-center"><?= $i + 1 ?></td>
+                <td><?= htmlspecialchars($cv['ten_cv'] ?? '') ?></td>
                 <td><?= htmlspecialchars($cv['ten_linh_vuc'] ?? '') ?></td>
                 <td><?= htmlspecialchars($cv['ky_nang'] ?? '') ?></td>
                 <td>
@@ -59,6 +61,12 @@
   <div class="col-md-5">
     <h5 class="mb-3">Thêm CV mới</h5>
     <form method="post" enctype="multipart/form-data" class="border rounded-3 p-3 bg-white">
+      <div class="mb-3">
+        <label class="form-label">Tên CV (để dễ chọn)</label>
+        <input type="text" name="ten_cv" class="form-control" maxlength="150" placeholder="Ví dụ: Backend PHP - 12/2025">
+        <div class="form-text">Nếu bỏ trống, hệ thống tự lấy theo tên file bạn tải lên.</div>
+      </div>
+
       <div class="mb-3">
         <label class="form-label">Lĩnh vực</label>
         <select name="ma_linh_vuc" id="fieldSelect" class="form-select" required>

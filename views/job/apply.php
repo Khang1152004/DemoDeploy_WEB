@@ -40,7 +40,10 @@
         <option value="0">-- Chọn CV --</option>
         <?php foreach ($cvs as $cv): ?>
           <option value="<?= (int)$cv['ma_cv'] ?>">
-            CV #<?= (int)$cv['ma_cv'] ?> (<?= htmlspecialchars(basename($cv['file_cv'] ?? '')) ?>)
+            <?= htmlspecialchars(($cv['ten_cv'] ?? '') !== '' ? ($cv['ten_cv'] ?? '') : ('CV #' . (int)$cv['ma_cv'])) ?>
+            <?php if (!empty($cv['file_cv'])): ?>
+              (<?= htmlspecialchars(basename($cv['file_cv'])) ?>)
+            <?php endif; ?>
           </option>
         <?php endforeach; ?>
       </select>

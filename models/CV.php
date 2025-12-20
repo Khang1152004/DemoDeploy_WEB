@@ -35,17 +35,23 @@ class CV {
      */
     public static function listSimpleByCandidate($userId) {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT ma_cv, file_cv, ma_linh_vuc FROM ho_so_cv WHERE ma_ung_vien = ? ORDER BY ma_cv DESC");
+        $stmt = $conn->prepare("SELECT ma_cv, ten_cv, file_cv, ma_linh_vuc FROM ho_so_cv WHERE ma_ung_vien = ? ORDER BY ma_cv DESC");
         $stmt->execute([(int)$userId]);
         return $stmt->fetchAll();
     }
 
-    public static function create($userId, $fieldId, $skills, $filePath) {
+    public static function create($userId, $fieldId, $skills, $filePath, $cvName = null) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare(
-            "INSERT INTO ho_so_cv (ma_ung_vien, ma_linh_vuc, file_cv) VALUES (?,?,?)"
+            "INSERT INTO ho_so_cv (ma_ung_vien, ma_linh_vuc, ten_cv, file_cv) VALUES (?,?,?,?)"
         );
-        if (!$stmt->execute([(int)$userId, (int)$fieldId, $filePath])) {
+
+        $cvName = trim((string)$cvName);
+        if ($cvName === '') {
+            $cvName = null;
+        }
+
+        if (!$stmt->execute([(int)$userId, (int)$fieldId, $cvName, $filePath])) {
             return false;
         }
 
