@@ -18,6 +18,28 @@ class CV {
         return $stmt->fetchAll();
     }
 
+
+    /**
+     * Lấy CV theo mã CV nhưng đảm bảo thuộc về ứng viên hiện tại.
+     * Trả về 1 record hoặc false.
+     */
+    public static function findForCandidate($cvId, $userId) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT * FROM ho_so_cv WHERE ma_cv = ? AND ma_ung_vien = ?");
+        $stmt->execute([(int)$cvId, (int)$userId]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Danh sách CV đơn giản để dùng cho dropdown chọn khi ứng tuyển.
+     */
+    public static function listSimpleByCandidate($userId) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT ma_cv, file_cv, ma_linh_vuc FROM ho_so_cv WHERE ma_ung_vien = ? ORDER BY ma_cv DESC");
+        $stmt->execute([(int)$userId]);
+        return $stmt->fetchAll();
+    }
+
     public static function create($userId, $fieldId, $skills, $filePath) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare(

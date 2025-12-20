@@ -3,6 +3,8 @@ require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/Auth.php';
 require_once __DIR__ . '/../models/Job.php';
 require_once __DIR__ . '/../models/Application.php';
+require_once __DIR__ . '/../models/Candidate.php';
+require_once __DIR__ . '/../models/CV.php';
 require_once __DIR__ . '/../models/Notification.php';
 require_once __DIR__ . '/../models/Field.php';
 require_once __DIR__ . '/../models/Location.php';
@@ -65,6 +67,7 @@ class JobController extends Controller
         ]);
     }
 
+    
     public function apply()
     {
         $id  = (int)($_GET['id'] ?? 0);
@@ -82,10 +85,31 @@ class JobController extends Controller
         $error   = null;
         $success = null;
 
+        // Prefill thông tin liên hệ nếu ứng viên đang đăng nhập
+        $prefill = ['ho_ten' => '', 'email' => '', 'sdt' => ''];
+        $candidateId = Auth::role() === 'ung_vien' ? Auth::userId() : null;
+        $cvs = [];
+
+        if ($candidateId) {
+            $profile = Candidate::getProfile($candidateId);
+            $prefill['ho_ten'] = $profile['ho_ten'] ?? '';
+            $prefill['email']  = Auth::email() ?? '';
+            $prefill['sdt']    = $profile['sdt'] ?? '';
+
+            // Danh sách CV đã lưu để tái sử dụng khi ứng tuyển
+            $cvs = CV::listSimpleByCandidate($candidateId);
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ho_ten = trim($_POST['ho_ten'] ?? '');
             $email  = trim($_POST['email'] ?? '');
             $sdt    = trim($_POST['sdt'] ?? '');
+            $selectedCvId = (int)($_POST['selected_cv_id'] ?? 0);
+
+            // Giữ lại dữ liệu người dùng vừa nhập nếu có lỗi
+            $prefill['ho_ten'] = $ho_ten;
+            $prefill['email']  = $email;
+            $prefill['sdt']    = $sdt;
 
             // Validate dữ liệu liên hệ
             if ($ho_ten === '') {
@@ -96,22 +120,62 @@ class JobController extends Controller
                 $error = 'Vui lòng nhập số điện thoại liên hệ.';
             }
 
-            $candidateId = Auth::role() === 'ung_vien' ? Auth::userId() : null;
             $cvFilePath  = null;
+            $uploadDir = __DIR__ . '/../uploads/applications';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
 
-            // Chỉ xử lý upload nếu không có lỗi dữ liệu cơ bản
+            // 1) Ưu tiên CV upload mới nếu người dùng chọn upload
             if ($error === null && !empty($_FILES['cv_file']['name'])) {
-                $uploadDir = __DIR__ . '/../uploads/applications';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
+                $ext = strtolower(pathinfo($_FILES['cv_file']['name'], PATHINFO_EXTENSION));
+                $allowed = ['pdf', 'doc', 'docx'];
+                if (!in_array($ext, $allowed, true)) {
+                    $error = 'Chỉ cho phép file CV (pdf, doc, docx).';
+                } else {
+                    $name = 'apply_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
+                    $dest = $uploadDir . '/' . $name;
+                    if (move_uploaded_file($_FILES['cv_file']['tmp_name'], $dest)) {
+                        $cvFilePath = 'uploads/applications/' . $name;
+                    } else {
+                        $error = 'Upload CV thất bại. Vui lòng thử lại.';
+                    }
                 }
-                $ext  = strtolower(pathinfo($_FILES['cv_file']['name'], PATHINFO_EXTENSION));
-                $name = 'apply_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
-                $dest = $uploadDir . '/' . $name;
+            }
 
-                if (move_uploaded_file($_FILES['cv_file']['tmp_name'], $dest)) {
-                    $cvFilePath = 'uploads/applications/' . $name;
+            // 2) Nếu không upload mới, cho phép tái sử dụng CV đã lưu
+            if ($error === null && $cvFilePath === null && $candidateId && $selectedCvId > 0) {
+                $cv = CV::findForCandidate($selectedCvId, $candidateId);
+                if (!$cv || empty($cv['file_cv'])) {
+                    $error = 'CV đã chọn không hợp lệ.';
+                } else {
+                    $source = __DIR__ . '/../' . $cv['file_cv'];
+                    if (!file_exists($source)) {
+                        $error = 'Không tìm thấy file CV đã lưu. Vui lòng chọn CV khác.';
+                    } else {
+                        // Snapshot: copy CV sang thư mục applications để CV của đơn không bị ảnh hưởng nếu ứng viên xóa CV sau này.
+                        $ext = strtolower(pathinfo($source, PATHINFO_EXTENSION));
+                        $allowed = ['pdf', 'doc', 'docx'];
+                        if (!in_array($ext, $allowed, true)) {
+                            $error = 'File CV đã lưu có định dạng không hợp lệ.';
+                        } else {
+                            $name = 'apply_reuse_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
+                            $dest = $uploadDir . '/' . $name;
+                            if (@copy($source, $dest)) {
+                                $cvFilePath = 'uploads/applications/' . $name;
+                            } else {
+                                $error = 'Không thể tái sử dụng CV đã lưu. Vui lòng thử upload CV mới.';
+                            }
+                        }
+                    }
                 }
+            }
+
+            // 3) Bắt buộc phải có CV (upload mới hoặc chọn CV đã lưu)
+            if ($error === null && $cvFilePath === null) {
+                $error = $candidateId
+                    ? 'Vui lòng chọn CV đã lưu hoặc tải lên CV mới.'
+                    : 'Vui lòng tải lên CV để ứng tuyển.';
             }
 
             if ($error === null) {
@@ -137,6 +201,13 @@ class JobController extends Controller
             }
         }
 
-        $this->render('job/apply', compact('job', 'error', 'success'));
+        $this->render('job/apply', [
+            'job' => $job,
+            'error' => $error,
+            'success' => $success,
+            'prefill' => $prefill,
+            'cvs' => $cvs,
+        ]);
     }
+
 }
