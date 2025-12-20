@@ -24,20 +24,24 @@
           <td><?= htmlspecialchars($app['ten_cong_ty'] ?? '') ?></td>
           <td><?= htmlspecialchars($app['ngay_nop']) ?></td>
           <td>
-          <?php
+            <?php
             $status = $app['trang_thai'] ?? 'submitted';
             $label = 'Đã nộp';
             $cls = 'secondary';
-            if ($status === 'invited') {
-                $label = 'Được mời phỏng vấn';
-                $cls = 'success';
+
+            if ($status === 'in_review') {
+              $label = 'Đang xem xét';
+              $cls = 'info';
+            } elseif ($status === 'interview') {
+              $label = 'Phỏng vấn';
+              $cls = 'success';
             } elseif ($status === 'rejected') {
-                $label = 'Đã từ chối';
-                $cls = 'danger';
+              $label = 'Đã từ chối';
+              $cls = 'danger';
             }
-          ?>
-          <span class="badge bg-<?= $cls ?>"><?= $label ?></span>
-        </td>
+            ?>
+            <span class="badge bg-<?= $cls ?>"><?= $label ?></span>
+          </td>
         </tr>
       <?php endforeach; ?>
     </tbody>
