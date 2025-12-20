@@ -75,7 +75,7 @@ Auth::start();
               Quản lý CV
             </a>
 
-            <a class="nav-link" href="index.php?c=Candidate&a=dashboard">
+            <a class="text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-600" href="index.php?c=Candidate&a=dashboard">
               Dashboard
             </a>
 
