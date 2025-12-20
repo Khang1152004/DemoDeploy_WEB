@@ -23,7 +23,7 @@
         <table class="table table-bordered table-striped table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th class="text-center" style="width:60px;">#</th>
+              <th class="text-center" style="width:60px;">STT</th>
               <th>Tên CV</th>
               <th>Lĩnh vực</th>
               <th>Kỹ năng</th>
