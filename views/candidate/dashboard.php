@@ -1,6 +1,6 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h3>Dashboard Ứng viên</h3>
-  <a href="index.php?c=candidate&a=profile" class="btn btn-outline-primary">Chỉnh sửa hồ sơ</a>
+  <a href="index.php?c=candidate&a=account" class="btn btn-outline-primary">Chỉnh sửa hồ sơ</a>
 </div>
 
 <p class="text-muted">Danh sách các tin bạn đã ứng tuyển.</p>

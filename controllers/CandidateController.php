@@ -6,14 +6,18 @@ require_once __DIR__ . '/../models/Candidate.php';
 require_once __DIR__ . '/../models/Field.php';
 require_once __DIR__ . '/../models/Skill.php';
 require_once __DIR__ . '/../models/CV.php';
+require_once __DIR__ . '/../models/Application.php';
 
-class CandidateController extends Controller {
-    public function account() {
+class CandidateController extends Controller
+{
+    public function account()
+    {
         Auth::requireRole(['ung_vien']);
         $userId = Auth::userId();
         $user = User::findById($userId);
         $profile = Candidate::getProfile($userId);
-        $msg = null; $err = null;
+        $msg = null;
+        $err = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['update_profile'])) {
@@ -33,18 +37,22 @@ class CandidateController extends Controller {
                 $msg = 'Cập nhật thông tin thành công';
                 $profile = Candidate::getProfile($userId);
             } elseif (isset($_POST['change_password'])) {
-                $res = User::updatePassword($userId,
+                $res = User::updatePassword(
+                    $userId,
                     $_POST['current_password'] ?? '',
                     $_POST['new_password'] ?? '',
-                    $_POST['confirm_password'] ?? '');
-                if ($res['success']) $msg = $res['message']; else $err = $res['message'];
+                    $_POST['confirm_password'] ?? ''
+                );
+                if ($res['success']) $msg = $res['message'];
+                else $err = $res['message'];
             }
         }
 
-        $this->render('candidate/account', compact('user','profile','msg','err'));
+        $this->render('candidate/account', compact('user', 'profile', 'msg', 'err'));
     }
 
-    public function cv() {
+    public function cv()
+    {
         Auth::requireRole(['ung_vien']);
         $userId = Auth::userId();
         $fields = Field::all();
@@ -53,13 +61,13 @@ class CandidateController extends Controller {
 
         if (isset($_GET['delete'])) {
             CV::delete((int)$_GET['delete'], $userId);
-            $this->redirect(['c'=>'Candidate','a'=>'cv']);
+            $this->redirect(['c' => 'Candidate', 'a' => 'cv']);
         }
 
         // Đặt CV mặc định
         if (isset($_GET['set_default'])) {
             CV::setDefault((int)$_GET['set_default'], $userId);
-            $this->redirect(['c'=>'Candidate','a'=>'cv']);
+            $this->redirect(['c' => 'Candidate', 'a' => 'cv']);
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -74,18 +82,18 @@ class CandidateController extends Controller {
             $cvPath = null;
             if (!$errors) {
                 $uploadDir = __DIR__ . '/../uploads/cv';
-                if (!is_dir($uploadDir)) mkdir($uploadDir,0777,true);
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
                 $ext = strtolower(pathinfo($_FILES['cv_file']['name'], PATHINFO_EXTENSION));
-                $allowed = ['pdf','doc','docx'];
-                if (!in_array($ext,$allowed,true)) {
+                $allowed = ['pdf', 'doc', 'docx'];
+                if (!in_array($ext, $allowed, true)) {
                     $errors[] = 'Chỉ cho phép file pdf/doc/docx';
                 } else {
-                    $name = 'cv_'.time().'_'.mt_rand(1000,9999).'.'.$ext;
-                    $dest = $uploadDir.'/'.$name;
+                    $name = 'cv_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
+                    $dest = $uploadDir . '/' . $name;
                     if (!move_uploaded_file($_FILES['cv_file']['tmp_name'], $dest)) {
                         $errors[] = 'Upload CV thất bại';
                     } else {
-                        $cvPath = 'uploads/cv/'.$name;
+                        $cvPath = 'uploads/cv/' . $name;
                     }
                 }
             }
@@ -98,7 +106,7 @@ class CandidateController extends Controller {
                 }
 
                 if (CV::create($userId, $fieldId, $skillIds, $cvPath, $cvName)) {
-                    $this->redirect(['c'=>'Candidate','a'=>'cv']);
+                    $this->redirect(['c' => 'Candidate', 'a' => 'cv']);
                 } else {
                     $errors[] = 'Lỗi lưu CSDL';
                 }
@@ -109,11 +117,23 @@ class CandidateController extends Controller {
         $cvs = CV::getByCandidate($userId);
 
         $this->render('candidate/cv', [
-            'fields'=>$fields,
-            'skills'=>$skills,
-            'cvs'=>$cvs,
-            'errors'=>$errors,
-            'selectedFieldId'=>$selectedFieldId,
+            'fields' => $fields,
+            'skills' => $skills,
+            'cvs' => $cvs,
+            'errors' => $errors,
+            'selectedFieldId' => $selectedFieldId,
+        ]);
+    }
+    public function dashboard()
+    {
+        Auth::requireRole(['ung_vien']);
+        $userId = Auth::userId();
+
+        // Lấy danh sách các tin đã ứng tuyển
+        $applications = Application::listByCandidate($userId);
+
+        $this->render('candidate/dashboard', [
+            'applications' => $applications
         ]);
     }
 }
