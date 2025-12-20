@@ -133,15 +133,16 @@ CREATE TABLE `ho_so_cv` (
   `ma_ung_vien` int(11) NOT NULL,
   `ma_linh_vuc` int(11) DEFAULT NULL,
   `ten_cv` varchar(150) DEFAULT NULL,
-  `file_cv` varchar(255) NOT NULL
+  `file_cv` varchar(255) NOT NULL,
+  `is_default` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `ho_so_cv`
 --
 
-INSERT INTO `ho_so_cv` (`ma_cv`, `ma_ung_vien`, `ma_linh_vuc`, `ten_cv`, `file_cv`) VALUES
-(5, 7, 1, NULL, 'uploads/cv/cv_1765438690_6687.docx');
+INSERT INTO `ho_so_cv` (`ma_cv`, `ma_ung_vien`, `ma_linh_vuc`, `ten_cv`, `file_cv`, `is_default`) VALUES
+(5, 7, 1, NULL, 'uploads/cv/cv_1765438690_6687.docx', 1);
 
 -- --------------------------------------------------------
 

@@ -28,14 +28,24 @@
               <th>Lĩnh vực</th>
               <th>Kỹ năng</th>
               <th>File</th>
-              <th class="text-center" style="width:120px;">Hành động</th>
+              <th class="text-center" style="width:180px;">Hành động</th>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($cvs as $i => $cv): ?>
               <tr>
                 <td class="text-center"><?= $i + 1 ?></td>
-                <td><?= htmlspecialchars($cv['ten_cv'] ?? '') ?></td>
+                <td>
+                  <div class="fw-semibold">
+                    <?= htmlspecialchars($cv['ten_cv'] ?? '') ?>
+                    <?php if (!empty($cv['is_default'])): ?>
+                      <span class="badge bg-success ms-1">Mặc định</span>
+                    <?php endif; ?>
+                  </div>
+                  <?php if (empty($cv['ten_cv']) && !empty($cv['file_cv'])): ?>
+                    <div class="text-muted small">(<?= htmlspecialchars(basename($cv['file_cv'])) ?>)</div>
+                  <?php endif; ?>
+                </td>
                 <td><?= htmlspecialchars($cv['ten_linh_vuc'] ?? '') ?></td>
                 <td><?= htmlspecialchars($cv['ky_nang'] ?? '') ?></td>
                 <td>
@@ -44,6 +54,17 @@
                   <?php endif; ?>
                 </td>
                 <td class="text-center">
+                  <?php if (empty($cv['is_default'])): ?>
+                    <a href="index.php?c=Candidate&a=cv&set_default=<?= (int)$cv['ma_cv'] ?>"
+                       class="btn btn-sm btn-outline-primary mb-1">
+                      Đặt mặc định
+                    </a>
+                  <?php else: ?>
+                    <button type="button" class="btn btn-sm btn-primary mb-1" disabled>
+                      Đang mặc định
+                    </button>
+                  <?php endif; ?>
+
                   <a href="index.php?c=Candidate&a=cv&delete=<?= (int)$cv['ma_cv'] ?>"
                      class="btn btn-sm btn-outline-danger"
                      onclick="return confirm('Bạn có chắc muốn xóa CV này?');">

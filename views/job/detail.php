@@ -61,6 +61,23 @@
         <?php endif; ?>
       </div>
 
+      <?php if (!empty($quickStatus) && $quickStatus === 'success'): ?>
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+          Bạn đã ứng tuyển nhanh thành công bằng CV mặc định.
+        </div>
+      <?php elseif (!empty($quickStatus) && $quickStatus !== 'success'): ?>
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          Ứng tuyển nhanh không thực hiện được. Bạn có thể dùng nút Ứng tuyển để chọn CV khác.
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($canQuickApply) && Auth::role() === 'ung_vien'): ?>
+        <a href="index.php?c=Job&a=quickApply&id=<?= (int)$job['ma_tin_tuyen_dung'] ?>"
+           class="inline-flex w-full items-center justify-center px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">
+          Ứng tuyển nhanh (CV mặc định)
+        </a>
+      <?php endif; ?>
+
       <a href="index.php?c=Job&a=apply&id=<?= (int)$job['ma_tin_tuyen_dung'] ?>"
          class="inline-flex w-full items-center justify-center px-3 py-2 rounded-lg bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600">
         Ứng tuyển

@@ -18,6 +18,40 @@ class CV {
         return $stmt->fetchAll();
     }
 
+    /**
+     * Lấy mã CV mặc định của ứng viên.
+     */
+    public static function getDefaultId($userId) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT ma_cv FROM ho_so_cv WHERE ma_ung_vien = ? AND is_default = 1 LIMIT 1");
+        $stmt->execute([(int)$userId]);
+        $row = $stmt->fetch();
+        return $row ? (int)$row['ma_cv'] : 0;
+    }
+
+    /**
+     * Đặt 1 CV làm mặc định cho ứng viên (soft setting).
+     */
+    public static function setDefault($cvId, $userId) {
+        $conn = Database::getConnection();
+        $conn->beginTransaction();
+        try {
+            // Clear default
+            $stmt = $conn->prepare("UPDATE ho_so_cv SET is_default = 0 WHERE ma_ung_vien = ?");
+            $stmt->execute([(int)$userId]);
+
+            // Set new default (only if belongs to candidate)
+            $stmt2 = $conn->prepare("UPDATE ho_so_cv SET is_default = 1 WHERE ma_cv = ? AND ma_ung_vien = ?");
+            $stmt2->execute([(int)$cvId, (int)$userId]);
+
+            $conn->commit();
+            return $stmt2->rowCount() > 0;
+        } catch (Exception $e) {
+            $conn->rollBack();
+            return false;
+        }
+    }
+
 
     /**
      * Lấy CV theo mã CV nhưng đảm bảo thuộc về ứng viên hiện tại.
@@ -35,7 +69,7 @@ class CV {
      */
     public static function listSimpleByCandidate($userId) {
         $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT ma_cv, ten_cv, file_cv, ma_linh_vuc FROM ho_so_cv WHERE ma_ung_vien = ? ORDER BY ma_cv DESC");
+        $stmt = $conn->prepare("SELECT ma_cv, ten_cv, file_cv, ma_linh_vuc, is_default FROM ho_so_cv WHERE ma_ung_vien = ? ORDER BY is_default DESC, ma_cv DESC");
         $stmt->execute([(int)$userId]);
         return $stmt->fetchAll();
     }
@@ -43,7 +77,7 @@ class CV {
     public static function create($userId, $fieldId, $skills, $filePath, $cvName = null) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare(
-            "INSERT INTO ho_so_cv (ma_ung_vien, ma_linh_vuc, ten_cv, file_cv) VALUES (?,?,?,?)"
+            "INSERT INTO ho_so_cv (ma_ung_vien, ma_linh_vuc, ten_cv, file_cv, is_default) VALUES (?,?,?,?,0)"
         );
 
         $cvName = trim((string)$cvName);
@@ -56,6 +90,14 @@ class CV {
         }
 
         $cvId = (int)$conn->lastInsertId();
+
+        // Nếu chưa có CV mặc định thì set CV vừa tạo làm mặc định
+        $hasDefaultStmt = $conn->prepare("SELECT COUNT(*) AS c FROM ho_so_cv WHERE ma_ung_vien = ? AND is_default = 1");
+        $hasDefaultStmt->execute([(int)$userId]);
+        $hasDefault = (int)($hasDefaultStmt->fetch()['c'] ?? 0);
+        if ($hasDefault === 0) {
+            self::setDefault($cvId, $userId);
+        }
 
         if (!empty($skills)) {
             $stmt2 = $conn->prepare("INSERT INTO cv_kynang (ma_cv, ma_ky_nang) VALUES (?,?)");
@@ -75,6 +117,8 @@ class CV {
         $cv = $stmt->fetch();
         if (!$cv) return;
 
+        $wasDefault = !empty($cv['is_default']);
+
         $stmt2 = $conn->prepare("DELETE FROM cv_kynang WHERE ma_cv = ?");
         $stmt2->execute([(int)$cvId]);
 
@@ -84,6 +128,16 @@ class CV {
         if (!empty($cv['file_cv'])) {
             $full = __DIR__ . '/../' . $cv['file_cv'];
             if (file_exists($full)) @unlink($full);
+        }
+
+        // Nếu xóa CV mặc định thì tự động set CV mới nhất còn lại làm mặc định
+        if ($wasDefault) {
+            $stmt4 = $conn->prepare("SELECT ma_cv FROM ho_so_cv WHERE ma_ung_vien = ? ORDER BY ma_cv DESC LIMIT 1");
+            $stmt4->execute([(int)$userId]);
+            $row = $stmt4->fetch();
+            if ($row) {
+                self::setDefault((int)$row['ma_cv'], $userId);
+            }
         }
     }
 

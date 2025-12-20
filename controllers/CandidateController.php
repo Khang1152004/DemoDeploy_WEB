@@ -56,6 +56,12 @@ class CandidateController extends Controller {
             $this->redirect(['c'=>'Candidate','a'=>'cv']);
         }
 
+        // Đặt CV mặc định
+        if (isset($_GET['set_default'])) {
+            CV::setDefault((int)$_GET['set_default'], $userId);
+            $this->redirect(['c'=>'Candidate','a'=>'cv']);
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fieldId = (int)($_POST['ma_linh_vuc'] ?? 0);
             $selectedFieldId = $fieldId;

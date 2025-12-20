@@ -39,7 +39,7 @@
         name="selected_cv_id">
         <option value="0">-- Chọn CV --</option>
         <?php foreach ($cvs as $cv): ?>
-          <option value="<?= (int)$cv['ma_cv'] ?>">
+          <option value="<?= (int)$cv['ma_cv'] ?>" <?= (!empty($defaultCvId) && (int)$defaultCvId === (int)$cv['ma_cv']) ? 'selected' : '' ?>>
             <?= htmlspecialchars(($cv['ten_cv'] ?? '') !== '' ? ($cv['ten_cv'] ?? '') : ('CV #' . (int)$cv['ma_cv'])) ?>
             <?php if (!empty($cv['file_cv'])): ?>
               (<?= htmlspecialchars(basename($cv['file_cv'])) ?>)

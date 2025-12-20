@@ -33,9 +33,104 @@ class JobController extends Controller
         // Không lọc trạng thái, không check hạn nộp
         // → bất kỳ tin nào có trong DB đều xem được (kể cả pending, rejected, delete_pending...)
 
+        // Tính năng ứng tuyển nhanh: chỉ bật khi ứng viên có CV mặc định
+        $canQuickApply = false;
+        if (Auth::role() === 'ung_vien') {
+            $candidateId = Auth::userId();
+            $defaultCvId = CV::getDefaultId($candidateId);
+            $canQuickApply = $defaultCvId > 0;
+        }
+
         $this->render('job/detail', [
             'job' => $job,
+            'canQuickApply' => $canQuickApply,
+            'quickStatus' => $_GET['quick'] ?? null,
         ]);
+    }
+
+    /**
+     * Ứng tuyển nhanh 1 click bằng CV mặc định (chỉ cho ứng viên).
+     */
+    public function quickApply()
+    {
+        Auth::requireRole(['ung_vien']);
+
+        $id  = (int)($_GET['id'] ?? 0);
+        $job = Job::get($id);
+        $today = date('Y-m-d');
+
+        // Chỉ cho ứng tuyển nhanh với tin đang hiển thị/cho phép ứng tuyển
+        if (
+            !$job
+            || !in_array($job['trang_thai_tin_dang'], ['approved', 'delete_pending'], true)
+            || $job['han_nop_ho_so'] < $today
+        ) {
+            $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'job_invalid']);
+        }
+
+        $candidateId = Auth::userId();
+        $defaultCvId = CV::getDefaultId($candidateId);
+        if ($defaultCvId <= 0) {
+            $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'no_default_cv']);
+        }
+
+        $profile = Candidate::getProfile($candidateId);
+        $ho_ten = trim($profile['ho_ten'] ?? '');
+        $email  = trim(Auth::email() ?? '');
+        $sdt    = trim($profile['sdt'] ?? '');
+
+        if ($ho_ten === '' || $email === '' || $sdt === '') {
+            // Thiếu thông tin liên hệ → chuyển qua form apply để người dùng bổ sung
+            $this->redirect(['c' => 'Job', 'a' => 'apply', 'id' => $id]);
+        }
+
+        // Snapshot CV mặc định sang applications
+        $cv = CV::findForCandidate($defaultCvId, $candidateId);
+        if (!$cv || empty($cv['file_cv'])) {
+            $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'cv_invalid']);
+        }
+
+        $source = __DIR__ . '/../' . $cv['file_cv'];
+        if (!file_exists($source)) {
+            $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'cv_missing']);
+        }
+
+        $uploadDir = __DIR__ . '/../uploads/applications';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $ext = strtolower(pathinfo($source, PATHINFO_EXTENSION));
+        $allowed = ['pdf', 'doc', 'docx'];
+        if (!in_array($ext, $allowed, true)) {
+            $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'cv_ext_invalid']);
+        }
+
+        $name = 'apply_quick_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
+        $dest = $uploadDir . '/' . $name;
+        if (!@copy($source, $dest)) {
+            $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'copy_failed']);
+        }
+
+        $data = [
+            'ho_ten' => $ho_ten,
+            'email'  => $email,
+            'sdt'    => $sdt,
+            'cv_file' => 'uploads/applications/' . $name,
+        ];
+
+        if (Application::create($id, $candidateId, $data)) {
+            if (!empty($job['ma_doanh_nghiep'])) {
+                Notification::create(
+                    (int)$job['ma_doanh_nghiep'],
+                    "Có ứng viên ứng tuyển tin '" . $job['tieu_de'] . "' (Ứng tuyển nhanh)",
+                    "index.php?c=Employer&a=applications&job_id=" . $id
+                );
+            }
+            $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'success']);
+        }
+
+        $this->redirect(['c' => 'Job', 'a' => 'detail', 'id' => $id, 'quick' => 'failed']);
     }
 
 
@@ -89,6 +184,7 @@ class JobController extends Controller
         $prefill = ['ho_ten' => '', 'email' => '', 'sdt' => ''];
         $candidateId = Auth::role() === 'ung_vien' ? Auth::userId() : null;
         $cvs = [];
+        $defaultCvId = 0;
 
         if ($candidateId) {
             $profile = Candidate::getProfile($candidateId);
@@ -98,6 +194,9 @@ class JobController extends Controller
 
             // Danh sách CV đã lưu để tái sử dụng khi ứng tuyển
             $cvs = CV::listSimpleByCandidate($candidateId);
+
+            // CV mặc định để pre-select
+            $defaultCvId = CV::getDefaultId($candidateId);
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -207,6 +306,7 @@ class JobController extends Controller
             'success' => $success,
             'prefill' => $prefill,
             'cvs' => $cvs,
+            'defaultCvId' => $defaultCvId,
         ]);
     }
 
