@@ -12,6 +12,10 @@ require_once __DIR__ . '/core/Auth.php';
 $c = $_GET['c'] ?? 'Home';
 $a = $_GET['a'] ?? 'index';
 
+
+$c = preg_replace('/[^a-zA-Z0-9_]/', '', $c);   // chống ký tự lạ
+$c = ucfirst(strtolower($c));                   // candidate -> Candidate, home -> Home
+
 $controllerName = $c . 'Controller';
 $file = __DIR__ . '/controllers/' . $controllerName . '.php';
 if (!file_exists($file)) {
